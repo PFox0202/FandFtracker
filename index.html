@@ -272,6 +272,32 @@ h3{font-size:14px;font-weight:700;color:var(--navy);margin-bottom:8px}
   </div>
 
   <div id="mp-slots"></div>
+
+  <!-- Quick add meal directly on meal plan screen -->
+  <div style="margin-top:8px">
+    <button id="qa-toggle-btn" onclick="toggleQAForm()" style="width:100%;padding:12px;border-radius:12px;border:1.5px dashed var(--border);background:transparent;color:var(--muted);font-size:14px;font-weight:600;cursor:pointer;font-family:inherit;transition:all .15s">
+      + Add something extra
+    </button>
+    <div id="qa-form" style="display:none;margin-top:8px">
+      <div class="card" style="background:var(--cream);border:1.5px solid #0F6E5630">
+        <div style="font-size:13px;font-weight:700;color:var(--teal);margin-bottom:12px;text-transform:uppercase;letter-spacing:.05em">Quick Add Meal</div>
+        <button onclick="toggleQAPresets()" id="qa-preset-btn" style="width:100%;padding:9px 14px;border-radius:10px;border:1.5px solid var(--border);background:#FAFAF8;color:var(--muted);cursor:pointer;font-size:13px;font-weight:600;text-align:left;font-family:inherit;margin-bottom:8px">Pick from meal list ▾</button>
+        <div id="qa-presets" style="display:none;margin-bottom:10px">
+          <div id="qa-preset-list" class="preset-grid"></div>
+        </div>
+        <input class="input" id="qa-name" placeholder="Meal name" style="margin-bottom:8px"/>
+        <div class="grid3" style="margin-bottom:10px">
+          <div><div class="label">Protein (g)</div><input class="input" id="qa-protein" placeholder="25" type="number"/></div>
+          <div><div class="label">Calories</div><input class="input" id="qa-cals" placeholder="300" type="number"/></div>
+          <div><div class="label">Time</div><input class="input" id="qa-time" placeholder="2pm"/></div>
+        </div>
+        <div style="display:flex;gap:8px">
+          <button class="btn btn-teal" onclick="quickAddMeal()" style="flex:1">+ Log It</button>
+          <button class="btn btn-ghost btn-sm" onclick="toggleQAForm()">Cancel</button>
+        </div>
+      </div>
+    </div>
+  </div>
 </div>
 
 <!-- WORKOUT -->
@@ -612,6 +638,7 @@ async function goto(screen){
   if(screen==='weight')     await initWeight();
   if(screen==='history')    await initHistory();
   if(screen==='recipes')    initRecipes();
+  if(screen==='planahead')  await initPlanAhead();
   window.scrollTo(0,0);
 }
 
@@ -1593,6 +1620,224 @@ function renderRecipes(tab) {
   });
 }
 
+
+// ── PLAN AHEAD ────────────────────────────────────────────────
+let paDays = 0;
+let paTrainingSelections = {}; // date -> training type
+
+async function initPlanAhead() {
+  paDays = 0;
+  paTrainingSelections = {};
+  document.getElementById('pa-content').innerHTML = '';
+  // Reset selector buttons
+  document.querySelectorAll('#pa-day-selector .tag').forEach(b => {
+    b.className = 'tag tag-inactive';
+  });
+}
+
+function setPADays(n) {
+  paDays = n;
+  // Update selector buttons
+  const labels = ['Tomorrow','2 days','3 days','5 days','Full week'];
+  const vals = [1,2,3,5,7];
+  document.querySelectorAll('#pa-day-selector .tag').forEach((b,i) => {
+    b.className = 'tag ' + (vals[i] === n ? 'tag-active' : 'tag-inactive');
+  });
+  renderPlanAhead();
+}
+window.setPADays = setPADays;
+
+async function renderPlanAhead() {
+  const container = document.getElementById('pa-content');
+  container.innerHTML = '';
+
+  for(let i = 1; i <= paDays; i++) {
+    const d = new Date();
+    d.setDate(d.getDate() + i);
+    const ds = d.toISOString().split('T')[0];
+    const dayName = d.toLocaleDateString('en-US', {weekday:'long', month:'short', day:'numeric'});
+
+    // Check if we have a saved checkin for this date
+    const saved = await fbLoad('checkin', ds);
+    const selectedType = paTrainingSelections[ds] || (saved ? saved.type : null);
+
+    // Day card
+    const dayCard = document.createElement('div');
+    dayCard.style.marginBottom = '16px';
+
+    // Day header
+    const header = document.createElement('div');
+    header.style.cssText = 'background:var(--navy);border-radius:12px 12px 0 0;padding:12px 16px;display:flex;justify-content:space-between;align-items:center';
+    header.innerHTML = `
+      <div>
+        <div style="font-size:15px;font-weight:700;color:#fff">${dayName}</div>
+        <div style="font-size:12px;color:rgba(255,255,255,.65);margin-top:2px">${i === 1 ? 'Tomorrow' : `In ${i} days`}</div>
+      </div>
+      ${selectedType ? `<span style="background:rgba(255,255,255,.15);color:#fff;padding:3px 10px;border-radius:20px;font-size:12px;font-weight:600">${TRAINING_TYPES.find(t=>t.id===selectedType)?.emoji} ${TRAINING_TYPES.find(t=>t.id===selectedType)?.label}</span>` : '<span style="color:rgba(255,255,255,.5);font-size:12px">Select training type</span>'}
+    `;
+    dayCard.appendChild(header);
+
+    // Training type selector
+    const typeSelector = document.createElement('div');
+    typeSelector.style.cssText = 'background:#F8F8F8;padding:10px 12px;border-left:1px solid var(--border);border-right:1px solid var(--border);display:flex;gap:5px;flex-wrap:wrap';
+    TRAINING_TYPES.forEach(tt => {
+      const btn = document.createElement('button');
+      btn.style.cssText = `padding:5px 10px;border-radius:20px;border:1.5px solid ${selectedType===tt.id?'var(--navy)':'var(--border)'};background:${selectedType===tt.id?'var(--navy)':'#fff'};color:${selectedType===tt.id?'#fff':'var(--muted)'};font-size:11px;font-weight:600;cursor:pointer;font-family:inherit;transition:all .15s`;
+      btn.textContent = tt.emoji + ' ' + tt.label.split(' ')[0] + (tt.label.split(' ')[1] ? ' ' + tt.label.split(' ')[1] : '');
+      btn.onclick = () => {
+        paTrainingSelections[ds] = tt.id;
+        renderPlanAhead();
+      };
+      typeSelector.appendChild(btn);
+    });
+    dayCard.appendChild(typeSelector);
+
+    // Meal plan for this day
+    if(selectedType) {
+      const tt = TRAINING_TYPES.find(t => t.id === selectedType);
+      const slots = SLOT_TEMPLATES[tt.slots] || [];
+
+      const mealList = document.createElement('div');
+      mealList.style.cssText = 'border:1px solid var(--border);border-top:none;border-radius:0 0 12px 12px;overflow:hidden';
+
+      // Calorie target bar
+      const calBar = document.createElement('div');
+      calBar.style.cssText = 'background:var(--lg);padding:8px 14px;display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid var(--border)';
+      calBar.innerHTML = `
+        <span style="font-size:12px;color:var(--muted)">Target: <strong style="color:var(--navy)">${tt.kcal} kcal</strong></span>
+        <span style="font-size:12px;color:var(--teal);font-weight:600">110g protein</span>
+      `;
+      mealList.appendChild(calBar);
+
+      slots.forEach((slot, si) => {
+        const row = document.createElement('div');
+        row.style.cssText = `padding:10px 14px;border-bottom:${si < slots.length-1 ? '1px solid var(--border)' : 'none'};background:${si%2===0?'#fff':'var(--lg)'}`;
+        row.innerHTML = `
+          <div style="font-size:11px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.04em;margin-bottom:3px">${slot.time}</div>
+          <div style="font-size:14px;font-weight:600;color:var(--text)">${slot.meals[0]}</div>
+          <div style="font-size:12px;color:var(--muted);margin-top:2px">~${slot.protein}g protein · ~${slot.cals} kcal</div>
+          ${slot.meals.length > 1 ? `<div style="margin-top:6px;display:flex;flex-wrap:wrap;gap:4px">${slot.meals.slice(1).map(m=>`<span style="background:var(--border);padding:2px 7px;border-radius:5px;font-size:11px;color:var(--muted)">or: ${m}</span>`).join('')}</div>` : ''}
+        `;
+        mealList.appendChild(row);
+      });
+
+      // Prep tips
+      const prepDiv = document.createElement('div');
+      prepDiv.style.cssText = 'padding:10px 14px;background:#FFFBF5;border-top:1px solid var(--border);border-radius:0 0 12px 12px';
+      const prepTips = getPrepTips(tt.slots, ds);
+      prepDiv.innerHTML = `<div style="font-size:11px;font-weight:700;color:var(--orange);text-transform:uppercase;letter-spacing:.04em;margin-bottom:4px">Prep tonight</div><div style="font-size:12px;color:var(--muted);line-height:1.6">${prepTips}</div>`;
+      mealList.appendChild(prepDiv);
+
+      dayCard.appendChild(mealList);
+    } else {
+      const empty = document.createElement('div');
+      empty.style.cssText = 'border:1px solid var(--border);border-top:none;border-radius:0 0 12px 12px;padding:14px;text-align:center;color:var(--muted);font-size:13px';
+      empty.textContent = 'Select a training type above to see the meal plan';
+      dayCard.appendChild(empty);
+    }
+
+    container.appendChild(dayCard);
+  }
+}
+
+function getPrepTips(slotType, ds) {
+  const tips = {
+    rest: 'Nothing to prep — eating window opens later. Rest and enjoy.',
+    gym: 'Make protein shake tonight and refrigerate. Hard boil eggs if needed.',
+    preclass: 'Make protein shake tonight. Set out dates/banana for 5:40am grab.',
+    gymrun: 'Make protein shake tonight. Prep Greek yogurt + granola for pre-run snack.',
+    preclassrun: 'Make protein shake tonight. Set out dates for 5:40am. Pre-portion Greek yogurt for pre-run.',
+    conditioning: 'Set out banana + dates for pre-class. Make pea protein shake tonight.',
+  };
+  // Check if overnight oats needed
+  const d = new Date(ds + 'T12:00:00');
+  const dow = d.getDay();
+  if(dow === 4) return (tips[slotType] || '') + ' Make overnight oats tonight for tomorrow morning.';
+  return tips[slotType] || 'Check meal plan and prep ingredients as needed.';
+}
+window.getPrepTips = getPrepTips;
+
+
+// ── QUICK ADD MEAL on meal plan screen ────────────────────────
+let showQAForm = false;
+let showQAPresets = false;
+
+function toggleQAForm() {
+  showQAForm = !showQAForm;
+  document.getElementById('qa-form').style.display = showQAForm ? 'block' : 'none';
+  const btn = document.getElementById('qa-toggle-btn');
+  btn.textContent = showQAForm ? '▲ Cancel' : '+ Add something extra';
+  btn.style.borderColor = showQAForm ? 'var(--teal)' : 'var(--border)';
+  btn.style.color = showQAForm ? 'var(--teal)' : 'var(--muted)';
+  if(showQAForm) {
+    document.getElementById('qa-name').value = '';
+    document.getElementById('qa-protein').value = '';
+    document.getElementById('qa-cals').value = '';
+    document.getElementById('qa-time').value = '';
+    document.getElementById('qa-preset-btn').textContent = 'Pick from meal list ▾';
+  }
+}
+window.toggleQAForm = toggleQAForm;
+
+function toggleQAPresets() {
+  showQAPresets = !showQAPresets;
+  document.getElementById('qa-presets').style.display = showQAPresets ? 'block' : 'none';
+  document.getElementById('qa-preset-btn').style.borderColor = showQAPresets ? 'var(--teal)' : 'var(--border)';
+  document.getElementById('qa-preset-btn').style.color = showQAPresets ? 'var(--teal)' : 'var(--muted)';
+  if(showQAPresets) renderQAPresets();
+}
+window.toggleQAPresets = toggleQAPresets;
+
+function renderQAPresets() {
+  const list = document.getElementById('qa-preset-list');
+  list.innerHTML = '';
+  // Show all meals + custom saved meals
+  const allMeals = [...MEALS, ...customMeals.filter(cm => !MEALS.find(m => m.name === cm.name))];
+  allMeals.forEach(m => {
+    const btn = document.createElement('button');
+    btn.className = 'preset-btn';
+    btn.innerHTML = `<span>${m.emoji||'🍽️'}</span><span style="flex:1">${m.name}</span><span style="color:var(--teal);font-weight:700">${m.protein}g</span>`;
+    btn.onclick = () => {
+      document.getElementById('qa-name').value = m.name === 'Custom meal' ? '' : m.name;
+      document.getElementById('qa-protein').value = m.protein || '';
+      document.getElementById('qa-cals').value = m.cals || '';
+      document.getElementById('qa-preset-btn').textContent = m.name === 'Custom meal' ? 'Pick from meal list ▾' : `${m.emoji||'🍽️'} ${m.name}`;
+      showQAPresets = false;
+      document.getElementById('qa-presets').style.display = 'none';
+      document.getElementById('qa-preset-btn').style.borderColor = 'var(--border)';
+      document.getElementById('qa-preset-btn').style.color = 'var(--muted)';
+    };
+    list.appendChild(btn);
+  });
+}
+
+async function quickAddMeal() {
+  const name = document.getElementById('qa-name').value.trim();
+  if(!name) return;
+  const protein = Number(document.getElementById('qa-protein').value) || 0;
+  const cals = Number(document.getElementById('qa-cals').value) || 0;
+  const time = document.getElementById('qa-time').value.trim();
+  const emoji = MEALS.find(m => m.name === name)?.emoji || customMeals.find(m => m.name === name)?.emoji || '🍽️';
+
+  const meal = { name, protein, cals, emoji, time, id: Date.now() };
+  mlData.meals = [meal, ...(mlData.meals || [])];
+  mlData.date = currentDate;
+  await fbSave('meals', currentDate, mlData);
+  showSaved('mp-saved');
+
+  // Reset and hide form
+  showQAForm = false;
+  showQAPresets = false;
+  document.getElementById('qa-form').style.display = 'none';
+  document.getElementById('qa-toggle-btn').textContent = '+ Add something extra';
+  document.getElementById('qa-toggle-btn').style.borderColor = 'var(--border)';
+  document.getElementById('qa-toggle-btn').style.color = 'var(--muted)';
+
+  // Refresh meal plan
+  await initMealPlan();
+}
+window.quickAddMeal = quickAddMeal;
+
 </script>
 
 <!-- RECIPES -->
@@ -1613,6 +1858,30 @@ function renderRecipes(tab) {
   <div id="recipe-veg" style="display:none"></div>
   <div id="recipe-vegan" style="display:none"></div>
   <div id="recipe-snacks" style="display:none"></div>
+</div>
+
+
+<!-- PLAN AHEAD -->
+<div id="screen-planahead" class="screen">
+  <div class="page-header">
+    <button class="back-btn" onclick="goto('home')">←</button>
+    <div><h2>Plan Ahead</h2><div class="subtitle">Preview upcoming meals for prep</div></div>
+  </div>
+
+  <!-- Days selector -->
+  <div class="card" style="background:var(--cream);border:1.5px solid #002664,30;margin-bottom:16px">
+    <div style="font-size:13px;font-weight:700;color:var(--navy);margin-bottom:12px">How many days ahead?</div>
+    <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:14px" id="pa-day-selector">
+      <button class="tag tag-inactive" onclick="setPADays(1)">Tomorrow</button>
+      <button class="tag tag-inactive" onclick="setPADays(2)">2 days</button>
+      <button class="tag tag-inactive" onclick="setPADays(3)">3 days</button>
+      <button class="tag tag-inactive" onclick="setPADays(5)">5 days</button>
+      <button class="tag tag-inactive" onclick="setPADays(7)">Full week</button>
+    </div>
+    <div style="font-size:12px;color:var(--muted);font-style:italic">Tap a day below to set its training type and see the meal plan</div>
+  </div>
+
+  <div id="pa-content"></div>
 </div>
 
 </body>
