@@ -492,6 +492,38 @@ const TRAINING_TYPES=[
   {id:'conditioning',label:'Sunday conditioning',             sub:'Full body conditioning class',                      emoji:'⚡', kcal:2050, slots:'conditioning'},
 ];
 
+
+const MEAL_INGREDIENTS = {
+  'Banana + dates':                ['Banana (1)', 'Medjool dates (3)'],
+  'Dried apricots (pre-gym)':      ['Dried apricots (45g)'],
+  'Banana':                        ['Banana (1)'],
+  'Protein shake + salmon scrambled eggs': ['Protein powder (1 scoop)', 'Oat milk (240ml)', 'Eggs (2)', 'Smoked salmon (80g)', 'Baby spinach (30g)', 'Sourdough bread (1 slice)', 'Butter or olive oil'],
+  'Salmon scrambled eggs':         ['Eggs (2)', 'Smoked salmon (80g)', 'Baby spinach (30g)', 'Sourdough bread (1 slice)'],
+  'Pea protein shake + tofu scramble': ['Pea protein powder (1 scoop)', 'Oat milk (240ml)', 'Firm tofu (140g)', 'Baby spinach (30g)', 'Nutritional yeast (2 tbsp)', 'Sourdough bread (1 slice)', 'Soy sauce (low sodium)'],
+  'Protein shake + frittata':      ['Protein powder (1 scoop)', 'Oat milk (240ml)', 'Eggs (3)', 'Feta cheese (28g)', 'Baby spinach (30g)', 'Cherry tomatoes (6)'],
+  'Protein shake + yogurt parfait':['Protein powder (1 scoop)', 'Oat milk (240ml)', 'Greek yogurt full-fat (200g)', 'Granola (30g)', 'Mixed berries (75g)', 'Chia seeds (1 tbsp)'],
+  'Pea protein shake + overnight oats': ['Pea protein powder (1 scoop)', 'Oat milk (180ml)', 'Rolled oats (45g)', 'Chia seeds (1 tbsp)', 'Almond butter (1 tbsp)', 'Banana (½)'],
+  'Pea shake + overnight oats':    ['Pea protein powder (1 scoop)', 'Oat milk (180ml)', 'Rolled oats (45g)', 'Chia seeds (1 tbsp)', 'Almond butter (1 tbsp)', 'Banana (½)'],
+  'Pea protein shake + tempeh Buddha bowl': ['Pea protein powder (1 scoop)', 'Oat milk (240ml)', 'Tempeh (140g)', 'Sweet potato (150g)', 'Broccoli (90g)', 'Avocado (¼)', 'Tahini (22g)', 'Soy sauce (low sodium)'],
+  'Chicken quinoa bowl':           ['Rotisserie chicken (150g)', 'Pre-cooked quinoa (90g)', 'Cherry tomatoes (80g)', 'Cucumber (½)', 'Avocado (¼)', 'Olive oil', 'Lemon (½)'],
+  'Tempeh grain bowl':             ['Tempeh (140g)', 'Pre-cooked brown rice (90g)', 'Edamame frozen (80g)', 'Shredded carrots (30g)', 'Soy sauce (low sodium)', 'Sesame oil', 'Sesame dressing'],
+  'Chickpea feta wrap':            ['Canned chickpeas (120g)', 'Feta cheese (42g)', 'Cucumber (¼)', 'Cherry tomatoes (6)', 'Whole wheat wrap (1)', 'Olive oil', 'Lemon (¼)'],
+  'Chickpea curry + naan':         ['Canned chickpeas (1 can)', 'Jarred tikka masala sauce (½ jar)', 'Baby spinach (30g)', 'Naan bread (1)', 'Olive oil'],
+  'Black bean quinoa bowl':        ['Canned black beans (120g)', 'Pre-cooked quinoa (90g)', 'Frozen corn (40g)', 'Avocado (¼)', 'Jarred salsa (3 tbsp)', 'Lime (½)'],
+  'Red lentil dal':                ['Red lentils dry (100g)', 'Canned crushed tomatoes (200g)', 'Light coconut milk (100ml)', 'Garlic (3 cloves)', 'Ground cumin', 'Ground turmeric', 'Garam masala', 'Olive oil', 'Lemon (½)'],
+  'Lentil soup + sourdough':       ['Canned lentil soup (1 can)', 'Sourdough bread (1 slice)'],
+  'Tuna salad bowl':               ['Canned tuna (2 cans)', 'Mixed salad greens (60g)', 'Cherry tomatoes (8)', 'Kalamata olives (30g)', 'Capers (1 tbsp)', 'Olive oil', 'Lemon (½)'],
+  'Greek yogurt + granola':        ['Greek yogurt full-fat (150g)', 'Granola (30g)'],
+  'Tempeh Buddha bowl':            ['Tempeh (140g)', 'Sweet potato (150g)', 'Broccoli (90g)', 'Avocado (¼)', 'Tahini (22g)', 'Lemon (½)', 'Soy sauce (low sodium)'],
+  'Cottage cheese + fruit + walnuts': ['Protein cottage cheese (113g)', 'Mixed berries or fruit (30g)', 'Walnuts (15g)', 'Honey'],
+  'Cottage cheese bowl':           ['Protein cottage cheese (113g)', 'Honey', 'Cinnamon'],
+  'Apple + almond butter + almonds': ['Apple (1)', 'Almond butter (1 tbsp)', 'Almonds (20g)'],
+  'Edamame + protein ice cream':   ['Frozen edamame shelled (160g)', 'Protein ice cream'],
+  'Edamame + half scoop pea protein': ['Frozen edamame shelled (160g)', 'Pea protein powder (½ scoop)', 'Oat milk (120ml)'],
+  'Peach + cottage cheese':        ['Peach (1)', 'Protein cottage cheese (113g)'],
+  'Cottage cheese + walnuts':      ['Protein cottage cheese (113g)', 'Walnuts (15g)', 'Honey'],
+};
+
 // Recipe tab key mapping — links meal slots to recipe tab
 const SLOT_RECIPE_TAB = {
   'pregym': 'snacks', 'postgym': 'meat', 'lunch': 'vegan', 'prerun': 'veg',
@@ -1738,6 +1770,87 @@ async function renderPlanAhead() {
     }
 
     container.appendChild(dayCard);
+  }
+
+  // Build ingredient summary at the bottom
+  if(paDays > 0) {
+    const allIngredients = {};
+    for(let i = 1; i <= paDays; i++) {
+      const d = new Date();
+      d.setDate(d.getDate() + i);
+      const ds = d.toISOString().split('T')[0];
+      const selectedType = paTrainingSelections[ds] || null;
+      if(!selectedType) continue;
+      const tt = TRAINING_TYPES.find(t => t.id === selectedType);
+      const slots = SLOT_TEMPLATES[tt.slots] || [];
+      slots.forEach(slot => {
+        const mealName = slot.meals[0];
+        const ings = MEAL_INGREDIENTS[mealName] || [];
+        ings.forEach(ing => {
+          // Normalize ingredient name (remove quantity in brackets)
+          const key = ing.replace(/\s*\([^)]*\)/g, '').trim();
+          allIngredients[key] = (allIngredients[key] || []);
+          allIngredients[key].push(ing);
+        });
+      });
+    }
+
+    if(Object.keys(allIngredients).length > 0) {
+      const summaryDiv = document.createElement('div');
+      summaryDiv.className = 'card';
+      summaryDiv.style.marginTop = '8px';
+
+      let html = `<div style="font-size:13px;font-weight:700;color:var(--navy);margin-bottom:12px;display:flex;align-items:center;gap:8px">
+        🛒 Ingredients Summary
+        <span style="font-size:11px;color:var(--muted);font-weight:400">for ${paDays} day${paDays>1?'s':''} ahead</span>
+      </div>`;
+
+      // Group by category
+      const categories = {
+        'Proteins 🥩🥚': ['Eggs','Smoked salmon','Rotisserie chicken','Canned tuna','Firm tofu','Tempeh','Pea protein powder','Protein powder','Canned chickpeas','Canned black beans','Red lentils','Canned lentil','Protein cottage cheese'],
+        'Dairy & Alternatives 🥛': ['Greek yogurt','Oat milk','Feta cheese','Honey'],
+        'Produce 🥦': ['Banana','Avocado','Baby spinach','Cherry tomatoes','Cucumber','Broccoli','Sweet potato','Mixed berries','Apple','Peach','Lemon','Lime','Garlic','Shredded carrots'],
+        'Grains & Bread 🍞': ['Sourdough bread','Pre-cooked quinoa','Pre-cooked brown rice','Rolled oats','Whole wheat wrap','Naan bread'],
+        'Pantry 🫙': ['Almond butter','Tahini','Olive oil','Soy sauce','Sesame oil','Sesame dressing','Nutritional yeast','Chia seeds','Granola','Walnuts','Almonds','Cinnamon'],
+        'Canned & Jarred 🥫': ['Jarred tikka masala','Jarred salsa','Kalamata olives','Capers','Canned crushed tomatoes','Light coconut milk'],
+        'Frozen ❄️': ['Frozen edamame','Frozen corn','Protein ice cream','Medjool dates','Dried apricots'],
+        'Spices 🌿': ['Ground cumin','Ground turmeric','Garam masala','Butter'],
+      };
+
+      const assigned = new Set();
+      Object.entries(categories).forEach(([cat, keywords]) => {
+        const catItems = Object.keys(allIngredients).filter(ing =>
+          keywords.some(kw => ing.toLowerCase().includes(kw.toLowerCase()))
+        );
+        if(catItems.length === 0) return;
+        catItems.forEach(i => assigned.add(i));
+
+        html += `<div style="margin-bottom:10px">
+          <div style="font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;margin-bottom:6px">${cat}</div>
+          <div style="display:flex;flex-wrap:wrap;gap:5px">`;
+        catItems.forEach(ing => {
+          // Get most detailed version of the ingredient
+          const detail = allIngredients[ing][0];
+          html += `<span style="background:var(--lg);padding:4px 10px;border-radius:8px;font-size:13px;color:var(--text)">☐ ${detail}</span>`;
+        });
+        html += `</div></div>`;
+      });
+
+      // Uncategorized
+      const uncategorized = Object.keys(allIngredients).filter(i => !assigned.has(i));
+      if(uncategorized.length > 0) {
+        html += `<div style="margin-bottom:10px">
+          <div style="font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;margin-bottom:6px">Other</div>
+          <div style="display:flex;flex-wrap:wrap;gap:5px">`;
+        uncategorized.forEach(ing => {
+          html += `<span style="background:var(--lg);padding:4px 10px;border-radius:8px;font-size:13px;color:var(--text)">☐ ${allIngredients[ing][0]}</span>`;
+        });
+        html += `</div></div>`;
+      }
+
+      summaryDiv.innerHTML = html;
+      container.appendChild(summaryDiv);
+    }
   }
 }
 
