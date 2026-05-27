@@ -142,6 +142,46 @@ h3{font-size:14px;font-weight:700;color:var(--navy);margin-bottom:8px}
     <div style="font-size:18px;color:rgba(255,255,255,.5)">›</div>
   </button>
 
+  <!-- Daily Readiness Card from Garmin/Apple Health -->
+  <div id="home-readiness" style="display:none;margin-bottom:12px">
+    <div class="card" style="background:linear-gradient(135deg,#1A1A2E 0%,#002664 100%);border:none">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
+        <div style="font-size:12px;font-weight:600;color:rgba(255,255,255,.6);text-transform:uppercase;letter-spacing:.05em">Garmin Readiness</div>
+        <div id="home-readiness-date" style="font-size:11px;color:rgba(255,255,255,.4)"></div>
+      </div>
+      <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:8px">
+        <div style="text-align:center">
+          <div id="rd-hr" style="font-size:20px;font-weight:800;color:#fff">—</div>
+          <div style="font-size:10px;color:rgba(255,255,255,.5);margin-top:2px">RHR</div>
+        </div>
+        <div style="text-align:center;border-left:1px solid rgba(255,255,255,.1)">
+          <div id="rd-sleep" style="font-size:20px;font-weight:800;color:#fff">—</div>
+          <div style="font-size:10px;color:rgba(255,255,255,.5);margin-top:2px">Sleep hrs</div>
+        </div>
+        <div style="text-align:center;border-left:1px solid rgba(255,255,255,.1)">
+          <div id="rd-battery" style="font-size:20px;font-weight:800;color:#fff">—</div>
+          <div style="font-size:10px;color:rgba(255,255,255,.5);margin-top:2px">Body Battery</div>
+        </div>
+        <div style="text-align:center;border-left:1px solid rgba(255,255,255,.1)">
+          <div id="rd-steps" style="font-size:20px;font-weight:800;color:#fff">—</div>
+          <div style="font-size:10px;color:rgba(255,255,255,.5);margin-top:2px">Steps</div>
+        </div>
+      </div>
+      <div id="rd-zones" style="margin-top:10px;display:none">
+        <div style="font-size:10px;color:rgba(255,255,255,.5);text-transform:uppercase;letter-spacing:.05em;margin-bottom:6px">Last Run — Zone Breakdown</div>
+        <div style="display:flex;gap:3px;height:20px;border-radius:4px;overflow:hidden">
+          <div id="rd-z1" style="background:#1D9E75;height:100%;transition:width .4s" title="Zone 1"></div>
+          <div id="rd-z2" style="background:#3B9E1D;height:100%;transition:width .4s" title="Zone 2"></div>
+          <div id="rd-z3" style="background:#BA7517;height:100%;transition:width .4s" title="Zone 3"></div>
+          <div id="rd-z4" style="background:#C0392B;height:100%;transition:width .4s" title="Zone 4"></div>
+          <div id="rd-z5" style="background:#7B0000;height:100%;transition:width .4s" title="Zone 5"></div>
+        </div>
+        <div id="rd-zone-labels" style="display:flex;gap:3px;margin-top:4px;font-size:10px;color:rgba(255,255,255,.5)"></div>
+        <div id="rd-zone2-flag" style="margin-top:6px;font-size:11px;display:none"></div>
+      </div>
+    </div>
+  </div>
+
   <!-- Summary cards -->
   <div class="grid2" style="margin-bottom:12px">
     <div class="card grad-navy" style="border:none">
@@ -208,6 +248,7 @@ h3{font-size:14px;font-weight:700;color:var(--navy);margin-bottom:8px}
     <button class="btn btn-ghost" style="flex:1" onclick="goto('recipes')">Recipes 📖</button>
   </div>
   <button class="btn btn-ghost" style="margin-top:8px;width:100%" onclick="goto('planahead')">Plan Ahead 📅</button>
+  <button class="btn btn-ghost" style="margin-top:8px;width:100%" onclick="goto('activity')">Activity Log 🏃</button>
 </div>
 
 <!-- TRAINING CHECK-IN -->
@@ -557,7 +598,7 @@ const SLOT_TEMPLATES={
     {id:'postgym',   time:'7-8am',   label:'Post-Gym Meal',    protein:44, cals:480, meals:['Protein shake','Salmon scrambled eggs'],           note:'Protein within 45 min. Recovery from gym plus pre-loading for run.'},
     {id:'lunch',     time:'11am',    label:'Lunch (Higher Carbs)',protein:32, cals:480, meals:['Chicken quinoa bowl','Black bean quinoa bowl'], note:'Higher carbs than usual — pre-loading glycogen for evening run.'},
     {id:'prerun',    time:'Pre-run', label:'Pre-Run Snack',    protein:14, cals:180, meals:['Greek yogurt + granola','Overnight oats'],         note:'1.5 hours before your run. Light enough not to sit heavy.'},
-    {id:'postrun',   time:'Post-run',label:'Post-Run Recovery', protein:30, cals:380, meals:['Tempeh Buddha bowl','Lentil soup + sourdough'],  note:'Within 45 min of finishing. Protein + carbs to recover.'},
+    {id:'postrun',   time:'Post-run',label:'Post-Run Recovery', protein:28, cals:280, meals:['Protein shake + low fat milk','Tempeh Buddha bowl'],  note:'For late runs (8pm+) protein shake with low fat milk covers immediate recovery and overnight repair in one glass. Full meal optional if hungry.'},
     {id:'cottage',   time:'8-9pm',   label:'Evening Recovery', protein:14, cals:120, meals:['Cottage cheese bowl'],                            note:'After a double session day this is especially important.'},
   ],
   preclassrun:[
@@ -651,10 +692,35 @@ let showQP=false,showMP=false;
 let timerTotal=90,timerRemain=90,timerRunning=false,timerInterval=null;
 let selectedTraining=null;
 
+// ── IN-MEMORY CACHE ───────────────────────────────────────────
+const cache = {};
+const CACHE_TTL = 5 * 60 * 1000; // 5 minutes
+
+function cacheSet(key, value) {
+  cache[key] = { value, ts: Date.now() };
+}
+function cacheGet(key) {
+  const entry = cache[key];
+  if(!entry) return null;
+  if(Date.now() - entry.ts > CACHE_TTL) { delete cache[key]; return null; }
+  return entry.value;
+}
+function cacheInvalidate(col, id) {
+  delete cache[col + ':' + id];
+}
+function cacheInvalidateAll() {
+  Object.keys(cache).forEach(k => delete cache[k]);
+}
+
 function todayStr(){return new Date().toISOString().split('T')[0]}
 
 // ── FIREBASE ──────────────────────────────────────────────────
-async function fbSave(col,id,data){try{await db.collection(col).doc(id).set(data)}catch(e){console.warn(e)}}
+async function fbSave(col,id,data){
+  try{
+    await db.collection(col).doc(id).set(data);
+    cacheSet(col+':'+id, data); // update cache immediately on save
+  }catch(e){console.warn(e)}
+}
 async function fbLoad(col,id){try{const s=await db.collection(col).doc(id).get();return s.exists?s.data():null}catch(e){return null}}
 async function fbLoadAll(col){try{const s=await db.collection(col).orderBy(firebase.firestore.FieldPath.documentId(),'desc').get();const d=[];s.forEach(x=>d.push({id:x.id,...x.data()}));return d}catch(e){return[]}}
 
@@ -672,6 +738,7 @@ async function goto(screen){
   if(screen==='history')    await initHistory();
   if(screen==='recipes')    initRecipes();
   if(screen==='planahead')  await initPlanAhead();
+  if(screen==='activity')    await initActivity();
   window.scrollTo(0,0);
 }
 
@@ -680,6 +747,7 @@ async function initHome(){
   buildDateStrip();
   await loadDayData();
   renderHomeSummary();
+  loadReadiness();
 }
 function buildDateStrip(){
   const strip=document.getElementById('dateStrip');strip.innerHTML='';
@@ -696,6 +764,8 @@ function buildDateStrip(){
   }
 }
 async function loadDayData(){
+  // All five calls benefit from cache — custom data especially
+  // since it rarely changes and was previously re-fetched on every screen
   const [w,m,c,ce,cm]=await Promise.all([
     fbLoad('workouts',currentDate),
     fbLoad('meals',currentDate),
@@ -1295,11 +1365,226 @@ function renderHistNutrition(docs){
 function fmtDate(ds){try{return new Date(ds+'T12:00:00').toLocaleDateString('en-US',{weekday:'long',month:'short',day:'numeric'})}catch{return ds}}
 function showSaved(id){const el=document.getElementById(id);if(!el)return;el.textContent='✓ Saved';setTimeout(()=>el.textContent='',1500)}
 
+
+// ── GARMIN READINESS (via Apple Shortcut → Firebase) ──────────
+async function loadReadiness(){
+  const data = await fbLoad('readiness', todayStr());
+  if(!data) {
+    document.getElementById('home-readiness').style.display = 'none';
+    return;
+  }
+  document.getElementById('home-readiness').style.display = 'block';
+  document.getElementById('home-readiness-date').textContent = 'Updated ' + (data.time || 'today');
+
+  // Core metrics
+  document.getElementById('rd-hr').textContent = data.restingHR || '—';
+  document.getElementById('rd-sleep').textContent = data.sleepHours ? Number(data.sleepHours).toFixed(1) : '—';
+  document.getElementById('rd-battery').textContent = data.bodyBattery || '—';
+  document.getElementById('rd-steps').textContent = data.steps ? Number(data.steps).toLocaleString() : '—';
+
+  // Color code Body Battery
+  const bb = Number(data.bodyBattery);
+  const bbEl = document.getElementById('rd-battery');
+  if(bb >= 70) bbEl.style.color = '#4ADE80';
+  else if(bb >= 40) bbEl.style.color = '#FBBF24';
+  else bbEl.style.color = '#F87171';
+
+  // Color code RHR
+  const hr = Number(data.restingHR);
+  const hrEl = document.getElementById('rd-hr');
+  if(hr <= 50) hrEl.style.color = '#4ADE80';
+  else if(hr <= 60) hrEl.style.color = '#FBBF24';
+  else hrEl.style.color = '#F87171';
+
+  // Zone breakdown if run data present
+  if(data.z1 || data.z2 || data.z3 || data.z4 || data.z5) {
+    document.getElementById('rd-zones').style.display = 'block';
+    const z1=Number(data.z1||0), z2=Number(data.z2||0), z3=Number(data.z3||0),
+          z4=Number(data.z4||0), z5=Number(data.z5||0);
+    const total = z1+z2+z3+z4+z5;
+    if(total > 0) {
+      document.getElementById('rd-z1').style.width = (z1/total*100)+'%';
+      document.getElementById('rd-z2').style.width = (z2/total*100)+'%';
+      document.getElementById('rd-z3').style.width = (z3/total*100)+'%';
+      document.getElementById('rd-z4').style.width = (z4/total*100)+'%';
+      document.getElementById('rd-z5').style.width = (z5/total*100)+'%';
+
+      // Zone labels in minutes
+      document.getElementById('rd-zone-labels').innerHTML =
+        ['Z1','Z2','Z3','Z4','Z5'].map((z,i) => {
+          const mins = [z1,z2,z3,z4,z5][i];
+          return mins > 0 ? `<span style="flex:${mins}">${z} ${mins}m</span>` : '';
+        }).join('');
+
+      // Zone 2 compliance flag (VT1=140, VT2=149)
+      const z2pct = Math.round(z2/total*100);
+      const flagEl = document.getElementById('rd-zone2-flag');
+      flagEl.style.display = 'block';
+      if(z2pct >= 60) {
+        flagEl.innerHTML = '✅ Great Zone 2 run — ' + z2pct + '% in 115-140 bpm';
+        flagEl.style.color = '#4ADE80';
+      } else if(z2pct >= 40) {
+        flagEl.innerHTML = '⚠️ ' + z2pct + '% in Zone 2 — try slowing down slightly';
+        flagEl.style.color = '#FBBF24';
+      } else {
+        flagEl.innerHTML = '🔴 Only ' + z2pct + '% in Zone 2 — this run was too hard for an easy day';
+        flagEl.style.color = '#F87171';
+      }
+    }
+  }
+}
+
+// Called by Apple Shortcut via URL — saves readiness data to Firebase
+// URL format: https://pfox0202.github.io/FandFtracker/?readiness=1&rhr=42&sleep=7.2&battery=65&steps=8432&z1=5&z2=28&z3=8&z4=2&z5=0
+async function handleShortcutData(){
+  const params = new URLSearchParams(window.location.search);
+  if(!params.get('readiness')) return;
+  const data = {
+    restingHR: params.get('rhr') || null,
+    sleepHours: params.get('sleep') || null,
+    bodyBattery: params.get('battery') || null,
+    steps: params.get('steps') || null,
+    z1: params.get('z1') || null,
+    z2: params.get('z2') || null,
+    z3: params.get('z3') || null,
+    z4: params.get('z4') || null,
+    z5: params.get('z5') || null,
+    time: new Date().toLocaleTimeString('en-US',{hour:'2-digit',minute:'2-digit'}),
+    date: todayStr()
+  };
+  await fbSave('readiness', todayStr(), data);
+  // Clean URL so it doesn't re-trigger on reload
+  window.history.replaceState({}, document.title, window.location.pathname);
+}
+
+
+// ── ACTIVITY LOG ──────────────────────────────────────────────
+let selectedActType = null;
+let selectedActBaseCals = 0;
+
+async function initActivity(){
+  document.getElementById('act-date').textContent = fmtDate(currentDate);
+  const data = await fbLoad('activities', currentDate);
+  const acts = (data && data.activities) || [];
+  renderActivityList(acts);
+  updateCalBanner(acts);
+}
+
+function selectActType(btn, type, baseCals){
+  selectedActType = type;
+  selectedActBaseCals = baseCals;
+  document.querySelectorAll('#act-type-selector .tag').forEach(b => b.className = 'tag tag-inactive');
+  btn.className = 'tag tag-active';
+  document.getElementById('act-custom-name').style.display = type === 'Custom' ? 'block' : 'none';
+  // Auto-calculate calories
+  const dur = Number(document.getElementById('act-duration').value) || 30;
+  const intensity = document.getElementById('act-intensity').value;
+  const multiplier = intensity === 'light' ? 0.7 : intensity === 'hard' ? 1.4 : 1.0;
+  if(type !== 'Custom' && baseCals > 0){
+    document.getElementById('act-cals-burned').value = Math.round(baseCals * (dur/60) * multiplier);
+  }
+}
+window.selectActType = selectActType;
+
+async function logActivity(){
+  const name = selectedActType === 'Custom'
+    ? document.getElementById('act-name-input').value.trim()
+    : selectedActType;
+  if(!name) return;
+
+  const duration = Number(document.getElementById('act-duration').value) || 0;
+  const intensity = document.getElementById('act-intensity').value;
+  const calsBurned = Number(document.getElementById('act-cals-burned').value) || 0;
+
+  const data = await fbLoad('activities', currentDate);
+  const acts = (data && data.activities) || [];
+  const newAct = { name, duration, intensity, calsBurned, id: Date.now() };
+  const updated = [newAct, ...acts];
+
+  await fbSave('activities', currentDate, { date: currentDate, activities: updated });
+  showSaved('act-saved');
+  renderActivityList(updated);
+  updateCalBanner(updated);
+
+  // Reset form
+  selectedActType = null;
+  document.querySelectorAll('#act-type-selector .tag').forEach(b => b.className = 'tag tag-inactive');
+  document.getElementById('act-duration').value = '';
+  document.getElementById('act-cals-burned').value = '';
+  document.getElementById('act-name-input').value = '';
+  document.getElementById('act-custom-name').style.display = 'none';
+}
+window.logActivity = logActivity;
+
+async function removeActivity(id){
+  const data = await fbLoad('activities', currentDate);
+  const acts = ((data && data.activities) || []).filter(a => a.id !== id);
+  await fbSave('activities', currentDate, { date: currentDate, activities: acts });
+  showSaved('act-saved');
+  renderActivityList(acts);
+  updateCalBanner(acts);
+}
+window.removeActivity = removeActivity;
+
+function renderActivityList(acts){
+  const container = document.getElementById('act-list');
+  if(!acts.length){
+    container.innerHTML = '<div style="text-align:center;padding:20px;color:var(--muted);font-size:13px">No extra activities logged today.</div>';
+    return;
+  }
+  container.innerHTML = '';
+  acts.forEach(a => {
+    const card = document.createElement('div');
+    card.className = 'card';
+    card.style.padding = '12px 14px';
+    card.innerHTML = `
+      <div style="display:flex;align-items:center;gap:10px">
+        <div style="flex:1">
+          <div style="font-weight:600;color:var(--navy);font-size:14px">${a.name}</div>
+          <div style="font-size:12px;color:var(--muted);margin-top:2px">${a.duration} min · ${a.intensity} · ${a.calsBurned} kcal burned</div>
+        </div>
+        <button class="remove-btn" onclick="removeActivity(${a.id})">×</button>
+      </div>
+    `;
+    container.appendChild(card);
+  });
+}
+
+function updateCalBanner(acts){
+  const totalExtra = acts.reduce((s,a) => s + (a.calsBurned||0), 0);
+  const banner = document.getElementById('act-cal-banner');
+  if(totalExtra > 0){
+    banner.style.display = 'block';
+    banner.innerHTML = `🔥 ${totalExtra} extra kcal burned today — your calorie target increases by ${totalExtra} kcal to compensate.`;
+  } else {
+    banner.style.display = 'none';
+  }
+}
+
+async function saveZoneData(){
+  const existing = await fbLoad('readiness', todayStr()) || {};
+  const updated = {
+    ...existing,
+    z1: document.getElementById('zone-z1').value || null,
+    z2: document.getElementById('zone-z2').value || null,
+    z3: document.getElementById('zone-z3').value || null,
+    z4: document.getElementById('zone-z4').value || null,
+    z5: document.getElementById('zone-z5').value || null,
+    date: todayStr()
+  };
+  await fbSave('readiness', todayStr(), updated);
+  showSaved('act-saved');
+  // Refresh home readiness card
+  loadReadiness();
+}
+window.saveZoneData = saveZoneData;
+
 // ── BOOT ──────────────────────────────────────────────────────
 window.addEventListener('load',async()=>{
   await new Promise(r=>setTimeout(r,800));
   document.getElementById('loading').style.display='none';
   document.getElementById('screen-home').classList.add('active');
+  await handleShortcutData(); // process any incoming shortcut data first
   await initHome();
 });
 
@@ -1670,18 +1955,23 @@ async function initPlanAhead() {
 
 function setPADays(n) {
   paDays = n;
-  // Update selector buttons
-  const labels = ['Tomorrow','2 days','3 days','5 days','Full week'];
   const vals = [1,2,3,5,7];
   document.querySelectorAll('#pa-day-selector .tag').forEach((b,i) => {
     b.className = 'tag ' + (vals[i] === n ? 'tag-active' : 'tag-inactive');
   });
+  // Reset training selections for new day range
+  paTrainingSelections = {};
   renderPlanAhead();
 }
 window.setPADays = setPADays;
 
 async function renderPlanAhead() {
   const container = document.getElementById('pa-content');
+  // Show loading spinner
+  container.innerHTML = '<div style="text-align:center;padding:30px;color:var(--muted)"><div class="spinner" style="margin:0 auto 12px"></div><div style="font-size:13px">Building meal plan...</div></div>';
+
+  // Small delay to let spinner render before heavy work
+  await new Promise(r => setTimeout(r, 50));
   container.innerHTML = '';
 
   for(let i = 1; i <= paDays; i++) {
@@ -1996,6 +2286,79 @@ window.quickAddMeal = quickAddMeal;
   </div>
 
   <div id="pa-content"></div>
+</div>
+
+
+<!-- ACTIVITY LOG -->
+<div id="screen-activity" class="screen">
+  <div class="page-header">
+    <button class="back-btn" onclick="goto('home')">←</button>
+    <div><h2>Activity Log</h2><div class="subtitle" id="act-date"></div></div>
+    <span class="saved-toast" id="act-saved"></span>
+  </div>
+
+  <!-- Calorie adjustment banner -->
+  <div id="act-cal-banner" style="display:none" class="banner banner-green"></div>
+
+  <!-- Log unplanned activity -->
+  <div class="card" style="background:var(--cream);border:1.5px solid #FF6E0030;margin-bottom:12px">
+    <div style="font-size:13px;font-weight:700;color:var(--orange);margin-bottom:12px;text-transform:uppercase;letter-spacing:.05em">Log Unplanned Activity</div>
+
+    <div class="label" style="margin-bottom:4px">Activity Type</div>
+    <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px" id="act-type-selector">
+      <button class="tag tag-inactive" onclick="selectActType(this,'Hill walk',180)">🏔️ Hill walk</button>
+      <button class="tag tag-inactive" onclick="selectActType(this,'Extra run',400)">🏃 Extra run</button>
+      <button class="tag tag-inactive" onclick="selectActType(this,'Hike',300)">🥾 Hike</button>
+      <button class="tag tag-inactive" onclick="selectActType(this,'Swim',350)">🏊 Swim</button>
+      <button class="tag tag-inactive" onclick="selectActType(this,'Bike',300)">🚴 Bike</button>
+      <button class="tag tag-inactive" onclick="selectActType(this,'Yoga',150)">🧘 Yoga</button>
+      <button class="tag tag-inactive" onclick="selectActType(this,'Custom',0)">✏️ Custom</button>
+    </div>
+
+    <div id="act-custom-name" style="display:none;margin-bottom:8px">
+      <div class="label">Activity name</div>
+      <input class="input" id="act-name-input" placeholder="e.g. Tennis, Dance class"/>
+    </div>
+
+    <div class="grid2" style="margin-bottom:8px">
+      <div>
+        <div class="label">Duration (minutes)</div>
+        <input class="input" id="act-duration" placeholder="e.g. 45" type="number"/>
+      </div>
+      <div>
+        <div class="label">Intensity</div>
+        <select class="input" id="act-intensity">
+          <option value="light">Light (easy)</option>
+          <option value="moderate" selected>Moderate</option>
+          <option value="hard">Hard (sweating)</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="label">Estimated calories burned</div>
+    <input class="input" id="act-cals-burned" placeholder="Auto-calculated or enter manually" type="number" style="margin-bottom:10px"/>
+    <div style="font-size:11px;color:var(--muted);margin-bottom:10px;font-style:italic">Calorie target for today will increase by this amount</div>
+
+    <button class="btn btn-orange" onclick="logActivity()">+ Log Activity</button>
+  </div>
+
+  <!-- Logged activities -->
+  <div class="section-label">Today's Extra Activities</div>
+  <div id="act-list"></div>
+
+  <!-- Run zone entry (for last run) -->
+  <div class="card" style="margin-top:8px;border:1.5px solid #185FA530">
+    <div style="font-size:13px;font-weight:700;color:var(--sky);margin-bottom:12px;text-transform:uppercase;letter-spacing:.05em">Last Run — Zone Data</div>
+    <div style="font-size:12px;color:var(--muted);margin-bottom:12px;line-height:1.5">Enter minutes spent in each zone from your Garmin Connect app after your run. This shows on your home screen readiness card.</div>
+    <div style="display:grid;grid-template-columns:repeat(5,1fr);gap:6px;margin-bottom:10px">
+      <div><div class="label" style="color:#1D9E75">Z1</div><input class="input" id="zone-z1" placeholder="min" type="number" style="border-color:#1D9E7540"/></div>
+      <div><div class="label" style="color:#3B9E1D">Z2</div><input class="input" id="zone-z2" placeholder="min" type="number" style="border-color:#3B9E1D40"/></div>
+      <div><div class="label" style="color:#BA7517">Z3</div><input class="input" id="zone-z3" placeholder="min" type="number" style="border-color:#BA751740"/></div>
+      <div><div class="label" style="color:#C0392B">Z4</div><input class="input" id="zone-z4" placeholder="min" type="number" style="border-color:#C0392B40"/></div>
+      <div><div class="label" style="color:#7B0000">Z5</div><input class="input" id="zone-z5" placeholder="min" type="number" style="border-color:#7B000040"/></div>
+    </div>
+    <button class="btn btn-ghost" onclick="saveZoneData()" style="border-color:var(--sky);color:var(--sky)">Save Zone Data</button>
+  </div>
 </div>
 
 </body>
