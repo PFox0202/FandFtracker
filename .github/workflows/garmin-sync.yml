@@ -1,0 +1,29 @@
+name: Garmin Daily Sync
+
+on:
+  schedule:
+    - cron: '0 12 * * *'  # 7am EST daily (12:00 UTC)
+  workflow_dispatch:       # allows manual trigger from GitHub Actions tab
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install dependencies
+        run: |
+          pip install garminconnect firebase-admin requests
+
+      - name: Run Garmin sync
+        env:
+          GARMIN_EMAIL: ${{ secrets.GARMIN_EMAIL }}
+          GARMIN_PASSWORD: ${{ secrets.GARMIN_PASSWORD }}
+          FIREBASE_SERVICE_ACCOUNT: ${{ secrets.FIREBASE_SERVICE_ACCOUNT }}
+        run: python garmin_sync.py
