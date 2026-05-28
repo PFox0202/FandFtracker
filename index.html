@@ -645,49 +645,48 @@ const ALTS={
 };
 
 const MEALS=[
-  // Verified from USDA ingredient weights May 2026
-  // Format: {name, protein, carbs, fat, cals, emoji}
   {name:"Protein shake",protein:25,carbs:8,fat:3,cals:223,emoji:"🥤"},
   {name:"Pea protein shake",protein:25,carbs:6,fat:3,cals:218,emoji:"🥤"},
   {name:"Banana + dates",protein:2,carbs:58,fat:1,cals:234,emoji:"🍌"},
-  {name:"Dried apricots (pre-gym)",protein:2,cals:80,emoji:"🍑"},
-  {name:"Salmon scrambled eggs",protein:42,cals:383,emoji:"🍳"},
+  {name:"Dried apricots (pre-gym)",protein:2,carbs:18,fat:0,cals:80,emoji:"🍑"},
+  {name:"Salmon scrambled eggs",protein:42,carbs:20,fat:16,cals:383,emoji:"🍳"},
   {name:"Protein shake + salmon scrambled eggs",protein:58,carbs:28,fat:18,cals:606,emoji:"🍳"},
-  {name:"Smoked salmon",protein:20,cals:180,emoji:"🐟"},
-  {name:"Sable / black cod",protein:22,cals:200,emoji:"🐟"},
-  {name:"Hard boiled eggs (2)",protein:12,cals:140,emoji:"🥚"},
+  {name:"Smoked salmon",protein:20,carbs:0,fat:8,cals:180,emoji:"🐟"},
+  {name:"Sable / black cod",protein:22,carbs:0,fat:10,cals:200,emoji:"🐟"},
+  {name:"Hard boiled eggs (2)",protein:12,carbs:1,fat:9,cals:140,emoji:"🥚"},
   {name:"Chicken quinoa bowl",protein:47,carbs:52,fat:18,cals:607,emoji:"🥗"},
   {name:"Cottage cheese bowl",protein:12,carbs:8,fat:6,cals:132,emoji:"🫙"},
   {name:"Cottage cheese + fruit + walnuts",protein:15,carbs:18,fat:11,cals:247,emoji:"🫐"},
-  {name:"Greek yogurt parfait",protein:19,cals:470,emoji:"🍶"},
+  {name:"Greek yogurt parfait",protein:19,carbs:48,fat:12,cals:470,emoji:"🍶"},
   {name:"Protein shake + yogurt parfait",protein:54,carbs:72,fat:18,cals:863,emoji:"🍶"},
-  {name:"Overnight oats",protein:38,cals:524,emoji:"🥣"},
+  {name:"Overnight oats",protein:38,carbs:68,fat:16,cals:758,emoji:"🥣"},
   {name:"Pea shake + overnight oats",protein:52,carbs:68,fat:16,cals:758,emoji:"🥣"},
-  {name:"Tofu scramble",protein:22,cals:281,emoji:"🧆"},
+  {name:"Tofu scramble",protein:22,carbs:20,fat:10,cals:281,emoji:"🧆"},
   {name:"Pea shake + tofu scramble",protein:46,carbs:38,fat:12,cals:504,emoji:"🧆"},
   {name:"Tempeh grain bowl",protein:41,carbs:58,fat:22,cals:640,emoji:"🌾"},
-  {name:"Tempeh Buddha bowl",protein:33,cals:489,emoji:"🥢"},
-  {name:"Pea shake + tempeh Buddha bowl",protein:64,carbs:52,fat:28,cals:871,emoji:"🥢"},
+  {name:"Tempeh Buddha bowl",protein:33,carbs:38,fat:22,cals:489,emoji:"🥢"},
+  {name:"Pea protein shake + tempeh Buddha bowl",protein:64,carbs:52,fat:28,cals:871,emoji:"🥢"},
   {name:"Tuna salad bowl",protein:73,carbs:12,fat:22,cals:589,emoji:"🐟"},
-  {name:"Tuna wrap",protein:28,cals:360,emoji:"🌯"},
+  {name:"Tuna wrap",protein:28,carbs:38,fat:12,cals:360,emoji:"🌯"},
   {name:"Lentil dal",protein:29,carbs:68,fat:8,cals:547,emoji:"🍲"},
-  {name:"Lentil soup + sourdough",protein:30,cals:400,emoji:"🥣"},
+  {name:"Lentil soup + sourdough",protein:30,carbs:52,fat:6,cals:400,emoji:"🥣"},
   {name:"Black bean quinoa bowl",protein:18,carbs:72,fat:8,cals:399,emoji:"🫘"},
   {name:"Chickpea curry + naan",protein:28,carbs:72,fat:18,cals:664,emoji:"🍛"},
   {name:"Chickpea feta wrap",protein:24,carbs:62,fat:18,cals:577,emoji:"🌯"},
-  {name:"Falafel wrap",protein:22,cals:420,emoji:"🧆"},
-  {name:"3-egg frittata",protein:22,cals:273,emoji:"🍳"},
+  {name:"Falafel wrap",protein:22,carbs:52,fat:14,cals:420,emoji:"🧆"},
+  {name:"3-egg frittata",protein:22,carbs:8,fat:16,cals:273,emoji:"🍳"},
   {name:"Protein shake + frittata",protein:52,carbs:18,fat:22,cals:573,emoji:"🍳"},
-  {name:"Chia pudding",protein:8,cals:350,emoji:"🫙"},
-  {name:"Rice cakes + almond butter",protein:4,cals:160,emoji:"🍘"},
-  {name:"Edamame (1 cup)",protein:19,cals:194,emoji:"🫛"},
+  {name:"Chia pudding",protein:8,carbs:42,fat:14,cals:350,emoji:"🫙"},
+  {name:"Rice cakes + almond butter",protein:4,carbs:22,fat:9,cals:160,emoji:"🍘"},
+  {name:"Edamame (1 cup)",protein:19,carbs:14,fat:8,cals:194,emoji:"🫛"},
   {name:"Edamame + protein ice cream",protein:31,carbs:28,fat:8,cals:349,emoji:"🫛"},
-  {name:"Protein ice cream",protein:12,cals:155,emoji:"🍦"},
+  {name:"Protein ice cream",protein:12,carbs:20,fat:3,cals:155,emoji:"🍦"},
   {name:"Apple + almond butter + almonds",protein:8,carbs:38,fat:18,cals:309,emoji:"🍎"},
-  {name:"Greek yogurt + granola",protein:19,cals:470,emoji:"🍶"},
+  {name:"Greek yogurt + granola",protein:19,carbs:42,fat:10,cals:470,emoji:"🍶"},
   {name:"Peach + cottage cheese",protein:14,carbs:18,fat:2,cals:169,emoji:"🍑"},
   {name:"Banana",protein:1,carbs:27,fat:0,cals:107,emoji:"🍌"},
-  {name:"Custom meal",protein:0,cals:0,emoji:"✏️"}
+  {name:"Protein shake + low fat milk",protein:33,carbs:14,fat:4,cals:240,emoji:"🥤"},
+  {name:"Custom meal",protein:0,carbs:0,fat:0,cals:0,emoji:"✏️"}
 ];
 
 // ── STATE ─────────────────────────────────────────────────────
@@ -1270,7 +1269,7 @@ function renderMealList(){
   container.innerHTML='';
   meals.forEach(m=>{
     const card=document.createElement('div');card.className='card';
-    card.innerHTML=`<div class="meal-row"><div style="font-size:26px;flex-shrink:0">${m.emoji||'🍽️'}</div><div style="flex:1;min-width:0"><div style="font-weight:600;font-size:14px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${m.name}</div>${m.time?`<div style="font-size:12px;color:var(--muted)">${m.time}</div>`:''}</div><div style="text-align:right;flex-shrink:0"><div style="font-size:16px;font-weight:800;color:var(--teal)">${m.protein}g</div><div style="font-size:11px;color:var(--muted)">${m.cals?m.cals+' kcal':''}</div></div><button class="remove-btn" onclick="removeMeal(${m.id})">×</button></div>`;
+    card.innerHTML=`<div class="meal-row"><div style="font-size:26px;flex-shrink:0">${m.emoji||'🍽️'}</div><div style="flex:1;min-width:0"><div style="font-weight:600;font-size:14px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${m.name}</div>${m.time?`<div style="font-size:12px;color:var(--muted)">${m.time}</div>`:''}<div style="font-size:11px;color:var(--muted);margin-top:2px">C:${m.carbs||0}g · F:${m.fat||0}g</div></div><div style="text-align:right;flex-shrink:0"><div style="font-size:16px;font-weight:800;color:var(--teal)">${m.protein}g</div><div style="font-size:11px;color:var(--muted)">${m.cals?m.cals+' kcal':''}</div></div><button class="remove-btn" onclick="removeMeal(${m.id})">×</button></div>`;
     container.appendChild(card);
   });
 }
