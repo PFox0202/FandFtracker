@@ -1218,7 +1218,7 @@ async function addMeal(){
   if(!name){ alert('No meal name found - please type a name or select from dropdown'); return; }
   const protein=Number(document.getElementById('ml-protein').value)||0;
   const cals=Number(document.getElementById('ml-cals').value)||0;
-  const preset=MEALS.find(m=>m.name===name)||customMeals.find(m=>m.name===name);
+  const preset=selectedMealPreset||(MEALS.find(m=>m.name===name)||customMeals.find(m=>m.name===name));
   const emoji=preset?.emoji||'🍽️';
   const carbs=preset?.carbs||0;
   const fat=preset?.fat||0;
@@ -1238,6 +1238,7 @@ async function addMeal(){
   document.getElementById('ml-save-meal').checked=false;
   const mpSel = document.getElementById('mpSelect');
   if(mpSel) mpSel.value='';
+  selectedMealPreset = null;
   } catch(err) { alert('Error logging meal: ' + err.message); console.error(err); }
 }
 async function removeMeal(id){
@@ -1718,18 +1719,16 @@ function populateMealDropdown() {
   });
 }
 
+let selectedMealPreset = null;
 function selectFromDropdown(sel) {
   const name = sel.value;
-  if(!name) return;
+  if(!name) { selectedMealPreset = null; return; }
   const m = [...MEALS, ...customMeals].find(x => x.name === name);
-  if(!m) { alert('Meal not found: ' + name); return; }
+  if(!m) { selectedMealPreset = null; return; }
+  selectedMealPreset = m;
   document.getElementById('ml-name').value = m.name === 'Custom meal' ? '' : m.name;
-  document.getElementById('ml-protein').value = m.protein || '';
-  document.getElementById('ml-cals').value = m.cals || '';
-  // Show the populated name as confirmation
-  const nameField = document.getElementById('ml-name');
-  nameField.style.borderColor = 'var(--teal)';
-  setTimeout(() => nameField.style.borderColor = '', 1000);
+  document.getElementById('ml-protein').value = m.protein || 0;
+  document.getElementById('ml-cals').value = m.cals || 0;
 }
 window.populateMealDropdown = populateMealDropdown;
 window.selectFromDropdown = selectFromDropdown;
