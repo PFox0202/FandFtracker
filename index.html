@@ -325,7 +325,7 @@ h3{font-size:14px;font-weight:700;color:var(--navy);margin-bottom:8px}
         <div style="font-size:13px;font-weight:700;color:var(--teal);margin-bottom:12px;text-transform:uppercase;letter-spacing:.05em">Quick Add Meal</div>
         <button onclick="toggleQAPresets()" id="qa-preset-btn" style="width:100%;padding:9px 14px;border-radius:10px;border:1.5px solid var(--border);background:#FAFAF8;color:var(--muted);cursor:pointer;font-size:13px;font-weight:600;text-align:left;font-family:inherit;margin-bottom:8px">Pick from meal list ▾</button>
         <div id="qa-presets" style="display:none;margin-bottom:10px">
-          <div id="qa-preset-list" class="preset-grid"></div>
+          <div id="qa-preset-list"></div>
         </div>
         <input class="input" id="qa-name" placeholder="Meal name" style="margin-bottom:8px"/>
         <div class="grid3" style="margin-bottom:10px">
@@ -350,6 +350,13 @@ h3{font-size:14px;font-weight:700;color:var(--navy);margin-bottom:8px}
     <span class="saved-toast" id="wo-saved"></span>
   </div>
   <div class="tag-row" id="dayTypeTags"></div>
+
+  <!-- Active exercise quick-tap bar -->
+  <div id="active-ex-bar" style="display:none;margin-bottom:12px">
+    <div style="font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;margin-bottom:6px">Active Exercises — tap to add set</div>
+    <div id="active-ex-buttons" style="display:flex;gap:6px;flex-wrap:wrap"></div>
+  </div>
+
   <div class="card" style="background:var(--cream);border:1.5px solid #FF6E0030">
     <div style="font-size:13px;font-weight:700;color:var(--orange);margin-bottom:12px;text-transform:uppercase;letter-spacing:.05em">Add Set</div>
     <div style="display:flex;gap:8px;align-items:center;margin-bottom:8px">
@@ -375,7 +382,7 @@ h3{font-size:14px;font-weight:700;color:var(--navy);margin-bottom:8px}
     </div>
     <div style="display:flex;gap:8px">
       <button class="btn btn-orange" onclick="addSet()">+ Log Set</button>
-      <button class="btn btn-ghost btn-sm" onclick="goto('timer')" style="white-space:nowrap">⏱ Rest Timer</button>
+      <button class="btn btn-ghost btn-sm" onclick="timerReturnScreen='workout';goto('timer')" style="white-space:nowrap">⏱ Rest Timer</button>
     </div>
   </div>
   <div id="wo-list"></div>
@@ -399,15 +406,16 @@ h3{font-size:14px;font-weight:700;color:var(--navy);margin-bottom:8px}
       <div id="ml-pbar" style="width:0%;height:8px;border-radius:6px;transition:width .4s;background:var(--orange)"></div>
     </div>
     <div id="ml-remain" style="font-size:12px;color:rgba(255,255,255,.7)">110g to go</div>
+    <div id="ml-macro-totals" style="font-size:12px;color:rgba(255,255,255,.7);margin-top:6px;display:flex;gap:12px">
+      <span id="ml-carbs-total">C: 0g</span>
+      <span id="ml-fat-total">F: 0g</span>
+    </div>
   </div>
   <div class="card" style="background:var(--cream);border:1.5px solid #0F6E5630">
     <div style="font-size:13px;font-weight:700;color:var(--teal);margin-bottom:12px;text-transform:uppercase;letter-spacing:.05em">Add Meal</div>
-    <button onclick="toggleMP()" id="mpBtn" style="width:100%;padding:10px 14px;border-radius:10px;border:1.5px solid var(--border);background:#FAFAF8;color:var(--muted);cursor:pointer;font-size:13px;font-weight:600;text-align:left;font-family:inherit;margin-bottom:8px">Tap to pick a preset ▾</button>
-    <div id="mpPanel" style="display:none;margin-bottom:10px">
-      <div id="mpList" class="preset-grid"></div>
-      <div class="section-label">My Saved Meals</div>
-      <div id="myMealsList" class="preset-grid"></div>
-    </div>
+    <select id="mpSelect" onchange="selectFromDropdown(this)" class="input" style="margin-bottom:8px">
+      <option value="">— Pick from meal plan presets —</option>
+    </select>
     <input class="input" id="ml-name" placeholder="Meal name" style="margin-bottom:8px"/>
     <div class="grid3" style="margin-bottom:8px">
       <div><div class="label">Protein (g)</div><input class="input" id="ml-protein" placeholder="25" type="number"/></div>
@@ -426,7 +434,7 @@ h3{font-size:14px;font-weight:700;color:var(--navy);margin-bottom:8px}
 <!-- TIMER -->
 <div id="screen-timer" class="screen">
   <div class="page-header">
-    <button class="back-btn" onclick="goto('home')">←</button>
+    <button class="back-btn" onclick="goto(timerReturnScreen)">←</button>
     <div><h2>Rest Timer</h2><div class="subtitle">Time your breaks between sets</div></div>
   </div>
   <div class="card" style="text-align:center;padding:28px 16px">
@@ -638,46 +646,47 @@ const ALTS={
 
 const MEALS=[
   // Verified from USDA ingredient weights May 2026
-  {name:"Protein shake",protein:25,cals:223,emoji:"🥤"},
-  {name:"Pea protein shake",protein:25,cals:218,emoji:"🥤"},
-  {name:"Banana + dates",protein:2,cals:234,emoji:"🍌"},
+  // Format: {name, protein, carbs, fat, cals, emoji}
+  {name:"Protein shake",protein:25,carbs:8,fat:3,cals:223,emoji:"🥤"},
+  {name:"Pea protein shake",protein:25,carbs:6,fat:3,cals:218,emoji:"🥤"},
+  {name:"Banana + dates",protein:2,carbs:58,fat:1,cals:234,emoji:"🍌"},
   {name:"Dried apricots (pre-gym)",protein:2,cals:80,emoji:"🍑"},
   {name:"Salmon scrambled eggs",protein:42,cals:383,emoji:"🍳"},
-  {name:"Protein shake + salmon scrambled eggs",protein:58,cals:606,emoji:"🍳"},
+  {name:"Protein shake + salmon scrambled eggs",protein:58,carbs:28,fat:18,cals:606,emoji:"🍳"},
   {name:"Smoked salmon",protein:20,cals:180,emoji:"🐟"},
   {name:"Sable / black cod",protein:22,cals:200,emoji:"🐟"},
   {name:"Hard boiled eggs (2)",protein:12,cals:140,emoji:"🥚"},
-  {name:"Chicken quinoa bowl",protein:47,cals:607,emoji:"🥗"},
-  {name:"Cottage cheese bowl",protein:12,cals:132,emoji:"🫙"},
-  {name:"Cottage cheese + fruit + walnuts",protein:15,cals:247,emoji:"🫐"},
+  {name:"Chicken quinoa bowl",protein:47,carbs:52,fat:18,cals:607,emoji:"🥗"},
+  {name:"Cottage cheese bowl",protein:12,carbs:8,fat:6,cals:132,emoji:"🫙"},
+  {name:"Cottage cheese + fruit + walnuts",protein:15,carbs:18,fat:11,cals:247,emoji:"🫐"},
   {name:"Greek yogurt parfait",protein:19,cals:470,emoji:"🍶"},
-  {name:"Protein shake + yogurt parfait",protein:54,cals:863,emoji:"🍶"},
+  {name:"Protein shake + yogurt parfait",protein:54,carbs:72,fat:18,cals:863,emoji:"🍶"},
   {name:"Overnight oats",protein:38,cals:524,emoji:"🥣"},
-  {name:"Pea shake + overnight oats",protein:52,cals:758,emoji:"🥣"},
+  {name:"Pea shake + overnight oats",protein:52,carbs:68,fat:16,cals:758,emoji:"🥣"},
   {name:"Tofu scramble",protein:22,cals:281,emoji:"🧆"},
-  {name:"Pea shake + tofu scramble",protein:46,cals:504,emoji:"🧆"},
-  {name:"Tempeh grain bowl",protein:41,cals:640,emoji:"🌾"},
+  {name:"Pea shake + tofu scramble",protein:46,carbs:38,fat:12,cals:504,emoji:"🧆"},
+  {name:"Tempeh grain bowl",protein:41,carbs:58,fat:22,cals:640,emoji:"🌾"},
   {name:"Tempeh Buddha bowl",protein:33,cals:489,emoji:"🥢"},
-  {name:"Pea shake + tempeh Buddha bowl",protein:64,cals:871,emoji:"🥢"},
-  {name:"Tuna salad bowl",protein:73,cals:589,emoji:"🐟"},
+  {name:"Pea shake + tempeh Buddha bowl",protein:64,carbs:52,fat:28,cals:871,emoji:"🥢"},
+  {name:"Tuna salad bowl",protein:73,carbs:12,fat:22,cals:589,emoji:"🐟"},
   {name:"Tuna wrap",protein:28,cals:360,emoji:"🌯"},
-  {name:"Lentil dal",protein:29,cals:547,emoji:"🍲"},
+  {name:"Lentil dal",protein:29,carbs:68,fat:8,cals:547,emoji:"🍲"},
   {name:"Lentil soup + sourdough",protein:30,cals:400,emoji:"🥣"},
-  {name:"Black bean quinoa bowl",protein:18,cals:399,emoji:"🫘"},
-  {name:"Chickpea curry + naan",protein:28,cals:664,emoji:"🍛"},
-  {name:"Chickpea feta wrap",protein:24,cals:577,emoji:"🌯"},
+  {name:"Black bean quinoa bowl",protein:18,carbs:72,fat:8,cals:399,emoji:"🫘"},
+  {name:"Chickpea curry + naan",protein:28,carbs:72,fat:18,cals:664,emoji:"🍛"},
+  {name:"Chickpea feta wrap",protein:24,carbs:62,fat:18,cals:577,emoji:"🌯"},
   {name:"Falafel wrap",protein:22,cals:420,emoji:"🧆"},
   {name:"3-egg frittata",protein:22,cals:273,emoji:"🍳"},
-  {name:"Protein shake + frittata",protein:52,cals:573,emoji:"🍳"},
+  {name:"Protein shake + frittata",protein:52,carbs:18,fat:22,cals:573,emoji:"🍳"},
   {name:"Chia pudding",protein:8,cals:350,emoji:"🫙"},
   {name:"Rice cakes + almond butter",protein:4,cals:160,emoji:"🍘"},
   {name:"Edamame (1 cup)",protein:19,cals:194,emoji:"🫛"},
-  {name:"Edamame + protein ice cream",protein:31,cals:349,emoji:"🫛"},
+  {name:"Edamame + protein ice cream",protein:31,carbs:28,fat:8,cals:349,emoji:"🫛"},
   {name:"Protein ice cream",protein:12,cals:155,emoji:"🍦"},
-  {name:"Apple + almond butter + almonds",protein:8,cals:309,emoji:"🍎"},
+  {name:"Apple + almond butter + almonds",protein:8,carbs:38,fat:18,cals:309,emoji:"🍎"},
   {name:"Greek yogurt + granola",protein:19,cals:470,emoji:"🍶"},
-  {name:"Peach + cottage cheese",protein:14,cals:169,emoji:"🍑"},
-  {name:"Banana",protein:1,cals:107,emoji:"🍌"},
+  {name:"Peach + cottage cheese",protein:14,carbs:18,fat:2,cals:169,emoji:"🍑"},
+  {name:"Banana",protein:1,carbs:27,fat:0,cals:107,emoji:"🍌"},
   {name:"Custom meal",protein:0,cals:0,emoji:"✏️"}
 ];
 
@@ -691,6 +700,7 @@ let customMeals=[];
 let showQP=false,showMP=false;
 let timerTotal=90,timerRemain=90,timerRunning=false,timerInterval=null;
 let selectedTraining=null;
+let timerReturnScreen='home'; // where timer back button goes
 
 // ── IN-MEMORY CACHE ───────────────────────────────────────────
 const cache = {};
@@ -912,7 +922,7 @@ async function initMealPlan(){
         <div style="flex:1">
           <div class="meal-slot-time">${slot.time}${logged?' · ✓ logged':''}</div>
           <div class="meal-slot-name">${logged?logged.name:slot.meals[0]}</div>
-          <div class="meal-slot-macros">${logged?`${logged.protein}g protein · ${logged.cals} kcal`:`~${slot.protein}g protein · ~${slot.cals} kcal`}</div>
+          <div class="meal-slot-macros">${logged?`${logged.protein}g protein · ${logged.cals} kcal${logged.carbs>0?' · C:'+logged.carbs+'g · F:'+(logged.fat||0)+'g':''}`:'~'+slot.protein+'g protein · ~'+slot.cals+' kcal'}</div>
           ${!logged?`<div style="font-size:11px;color:var(--muted);margin-top:4px;font-style:italic">${slot.note}</div>`:''}
           ${slot.meals.length>1&&!logged?`<div style="margin-top:8px;display:flex;flex-wrap:wrap;gap:4px">${slot.meals.map(m=>`<span style="background:var(--lg);padding:3px 8px;border-radius:6px;font-size:11px;color:var(--muted)">${m}</span>`).join('')}</div>`:''}
         </div>
@@ -1035,6 +1045,7 @@ async function initWorkout(){
   document.getElementById('wo-weight').value='';
   document.getElementById('wo-reps').value='5';
   document.getElementById('wo-notes').value='';
+  updateActiveExBar();
 }
 function renderDayTags(){
   const c=document.getElementById('dayTypeTags');c.innerHTML='';
@@ -1137,33 +1148,49 @@ async function initMeals(){
   const[data,cm]=await Promise.all([fbLoad('meals',currentDate),fbLoad('custom','meals')]);
   mlData=data||{meals:[]};
   customMeals=(cm&&cm.list)||[];
+  populateMealDropdown(); // after customMeals loaded
   renderMealList();renderProteinBar();
   document.getElementById('ml-name').value='';
   document.getElementById('ml-protein').value='';
   document.getElementById('ml-cals').value='';
   document.getElementById('ml-time').value='';
-  document.getElementById('mpBtn').textContent='Tap to pick a preset ▾';
+  const mpSel=document.getElementById('mpSelect');
+  if(mpSel) mpSel.value='';
 }
-function toggleMP(){
-  showMP=!showMP;
-  document.getElementById('mpPanel').style.display=showMP?'block':'none';
-  document.getElementById('mpBtn').style.borderColor=showMP?'var(--teal)':'var(--border)';
-  document.getElementById('mpBtn').style.color=showMP?'var(--teal)':'var(--muted)';
-  if(showMP)renderMealPresets();
+// toggleMP replaced by dropdown
+function toggleMP(){} 
+function selectMLMeal(name) {
+  const m = [...MEALS, ...customMeals].find(x => x.name === name);
+  if(!m) return;
+  document.getElementById('ml-name').value = m.name==='Custom meal' ? '' : m.name;
+  document.getElementById('ml-protein').value = m.protein || '';
+  document.getElementById('ml-cals').value = m.cals || '';
+  showMP = false;
 }
+window.selectMLMeal = selectMLMeal;
+
 function renderMealPresets(){
   const list=document.getElementById('mpList');list.innerHTML='';
   MEALS.forEach(m=>{
-    const btn=document.createElement('button');btn.className='preset-btn';
-    btn.innerHTML=`<span>${m.emoji}</span><span style="flex:1">${m.name}</span><span style="color:var(--teal);font-weight:700">${m.protein}g</span>`;
+    const btn=document.createElement('button');
+    btn.style.cssText='width:100%;padding:10px 12px;border-radius:8px;border:1px solid var(--border);background:#FAFAF8;cursor:pointer;font-family:inherit;text-align:left;margin-bottom:4px;display:block';
+    const macroLine = `${m.cals||0} kcal · C:${m.carbs||0}g · F:${m.fat||0}g`;
+    btn.innerHTML=`<div style="display:flex;align-items:center;gap:8px">
+      <span style="font-size:20px">${m.emoji}</span>
+      <div style="flex:1">
+        <div style="font-size:13px;font-weight:600;color:var(--text)">${m.name}</div>
+        <div style="font-size:11px;color:var(--muted);margin-top:2px">${macroLine}</div>
+      </div>
+      <div style="color:var(--teal);font-weight:700;font-size:14px;flex-shrink:0">${m.protein}g</div>
+    </div>`;
     btn.onclick=()=>{
       document.getElementById('ml-name').value=m.name==='Custom meal'?'':m.name;
       document.getElementById('ml-protein').value=m.protein||'';
       document.getElementById('ml-cals').value=m.cals||'';
-      document.getElementById('mpBtn').textContent=m.name==='Custom meal'?'Tap to pick a preset ▾':`${m.emoji} ${m.name}`;
+      
       showMP=false;document.getElementById('mpPanel').style.display='none';
-      document.getElementById('mpBtn').style.borderColor='var(--border)';
-      document.getElementById('mpBtn').style.color='var(--muted)';
+      
+      
     };
     list.appendChild(btn);
   });
@@ -1171,29 +1198,37 @@ function renderMealPresets(){
   const myList=document.getElementById('myMealsList');myList.innerHTML='';
   if(customMeals.length===0){myList.innerHTML='<div style="grid-column:1/-1;font-size:12px;color:var(--muted);padding:4px 0">No saved meals yet. Log a meal and check "Save to my list".</div>';return}
   customMeals.forEach(m=>{
-    const btn=document.createElement('button');btn.className='preset-btn';
-    btn.innerHTML=`<span>${m.emoji||'🍽️'}</span><span style="flex:1">${m.name}</span><span style="color:var(--teal);font-weight:700">${m.protein}g</span>`;
-    btn.onclick=()=>{
-      document.getElementById('ml-name').value=m.name;
-      document.getElementById('ml-protein').value=m.protein;
-      document.getElementById('ml-cals').value=m.cals||'';
-      document.getElementById('mpBtn').textContent=`${m.emoji||'🍽️'} ${m.name}`;
-      showMP=false;document.getElementById('mpPanel').style.display='none';
-    };
-    myList.appendChild(btn);
+    const row=document.createElement('div');
+    row.style.cssText='display:flex;align-items:center;gap:8px;padding:10px 12px;border-radius:8px;border:1px solid var(--border);background:#FAFAF8;cursor:pointer;margin-bottom:4px';
+    row.innerHTML=`<span style="font-size:18px">${m.emoji||'🍽️'}</span>
+      <div style="flex:1">
+        <div style="font-size:13px;font-weight:600;color:var(--text)">${m.name}</div>
+        <div style="font-size:11px;color:var(--muted);margin-top:2px">${m.cals||0} kcal · C:${m.carbs||0}g · F:${m.fat||0}g</div>
+      </div>
+      <div style="color:var(--teal);font-weight:700;font-size:14px;flex-shrink:0">${m.protein}g</div>`;
+    row.addEventListener('click', () => selectMLMeal(m.name));
+    myList.appendChild(row);
   });
 }
 async function addMeal(){
-  const name=document.getElementById('ml-name').value.trim();if(!name)return;
+  try {
+  // Try ml-name field first, then fall back to dropdown value
+  let name=document.getElementById('ml-name').value.trim();
+  const dropdownSel = document.getElementById('mpSelect');
+  if(!name && dropdownSel && dropdownSel.value) name = dropdownSel.value;
+  if(!name){ alert('No meal name found - please type a name or select from dropdown'); return; }
   const protein=Number(document.getElementById('ml-protein').value)||0;
   const cals=Number(document.getElementById('ml-cals').value)||0;
-  const emoji=MEALS.find(m=>m.name===name)?.emoji||customMeals.find(m=>m.name===name)?.emoji||'🍽️';
+  const preset=MEALS.find(m=>m.name===name)||customMeals.find(m=>m.name===name);
+  const emoji=preset?.emoji||'🍽️';
+  const carbs=preset?.carbs||0;
+  const fat=preset?.fat||0;
   // Save custom meal if checked
   if(document.getElementById('ml-save-meal').checked&&!customMeals.find(m=>m.name===name)){
     customMeals=[{name,protein,cals,emoji},...customMeals];
     await fbSave('custom','meals',{list:customMeals});
   }
-  const meal={name,protein,cals,emoji,time:document.getElementById('ml-time').value.trim(),id:Date.now()};
+  const meal={name,protein,carbs,fat,cals,emoji,time:document.getElementById('ml-time').value.trim(),id:Date.now()};
   mlData.meals=[meal,...(mlData.meals||[])];mlData.date=currentDate;
   await fbSave('meals',currentDate,mlData);
   showSaved('ml-saved');renderMealList();renderProteinBar();
@@ -1202,7 +1237,9 @@ async function addMeal(){
   document.getElementById('ml-cals').value='';
   document.getElementById('ml-time').value='';
   document.getElementById('ml-save-meal').checked=false;
-  document.getElementById('mpBtn').textContent='Tap to pick a preset ▾';
+  const mpSel = document.getElementById('mpSelect');
+  if(mpSel) mpSel.value='';
+  } catch(err) { alert('Error logging meal: ' + err.message); console.error(err); }
 }
 async function removeMeal(id){
   mlData.meals=(mlData.meals||[]).filter(m=>m.id!==id);
@@ -1219,6 +1256,13 @@ function renderProteinBar(){
   document.getElementById('ml-pbar').style.background=pct>=100?'#4ADE80':'var(--orange)';
   const rem=110-total;
   document.getElementById('ml-remain').textContent=rem>0?`${rem}g protein to go`:'🎉 Protein goal hit!';
+  // Update macro totals
+  const totalCarbs = (mlData.meals||[]).reduce((s,m)=>s+(m.carbs||0),0);
+  const totalFat   = (mlData.meals||[]).reduce((s,m)=>s+(m.fat||0),0);
+  const carbsEl = document.getElementById('ml-carbs-total');
+  const fatEl   = document.getElementById('ml-fat-total');
+  if(carbsEl) carbsEl.textContent = `Carbs: ${totalCarbs}g`;
+  if(fatEl)   fatEl.textContent   = `Fat: ${totalFat}g`;
 }
 function renderMealList(){
   const container=document.getElementById('ml-list'),meals=mlData.meals||[];
@@ -1251,6 +1295,10 @@ function timerToggle(){
         document.getElementById('timerStartBtn').textContent='Start';
         document.getElementById('timerStatus').textContent='done! ✓';
         if(navigator.vibrate)navigator.vibrate([200,100,200,100,400]);
+        // Auto-return to workout after 2 seconds if timer was opened from workout
+        if(timerReturnScreen==='workout'){
+          setTimeout(()=>goto('workout'), 2000);
+        }
         try{const ctx=new(window.AudioContext||window.webkitAudioContext)();[0,.3,.6].forEach(t=>{const o=ctx.createOscillator(),g=ctx.createGain();o.connect(g);g.connect(ctx.destination);o.frequency.value=880;g.gain.setValueAtTime(.3,ctx.currentTime+t);g.gain.exponentialRampToValueAtTime(.001,ctx.currentTime+t+.2);o.start(ctx.currentTime+t);o.stop(ctx.currentTime+t+.3)})}catch(e){}
       }
     },1000);
@@ -1464,10 +1512,26 @@ let selectedActBaseCals = 0;
 
 async function initActivity(){
   document.getElementById('act-date').textContent = fmtDate(currentDate);
-  const data = await fbLoad('activities', currentDate);
+  const [data, rdData] = await Promise.all([
+    fbLoad('activities', currentDate),
+    fbLoad('readiness', todayStr())
+  ]);
   const acts = (data && data.activities) || [];
   renderActivityList(acts);
   updateCalBanner(acts);
+
+  // Pre-fill readiness form with today's existing data if any
+  if(rdData) {
+    if(rdData.restingHR) document.getElementById('rd-rhr-input').value = rdData.restingHR;
+    if(rdData.bodyBattery) document.getElementById('rd-battery-input').value = rdData.bodyBattery;
+    if(rdData.sleepHours) document.getElementById('rd-sleep-input').value = rdData.sleepHours;
+    if(rdData.steps) document.getElementById('rd-steps-input').value = rdData.steps;
+    if(rdData.z1) document.getElementById('zone-z1').value = rdData.z1;
+    if(rdData.z2) document.getElementById('zone-z2').value = rdData.z2;
+    if(rdData.z3) document.getElementById('zone-z3').value = rdData.z3;
+    if(rdData.z4) document.getElementById('zone-z4').value = rdData.z4;
+    if(rdData.z5) document.getElementById('zone-z5').value = rdData.z5;
+  }
 }
 
 function selectActType(btn, type, baseCals){
@@ -1561,30 +1625,121 @@ function updateCalBanner(acts){
   }
 }
 
-async function saveZoneData(){
+async function saveReadiness(){
   const existing = await fbLoad('readiness', todayStr()) || {};
   const updated = {
     ...existing,
-    z1: document.getElementById('zone-z1').value || null,
-    z2: document.getElementById('zone-z2').value || null,
-    z3: document.getElementById('zone-z3').value || null,
-    z4: document.getElementById('zone-z4').value || null,
-    z5: document.getElementById('zone-z5').value || null,
+    restingHR: document.getElementById('rd-rhr-input').value || existing.restingHR || null,
+    bodyBattery: document.getElementById('rd-battery-input').value || existing.bodyBattery || null,
+    sleepHours: document.getElementById('rd-sleep-input').value || existing.sleepHours || null,
+    steps: document.getElementById('rd-steps-input').value || existing.steps || null,
+    z1: document.getElementById('zone-z1').value || existing.z1 || null,
+    z2: document.getElementById('zone-z2').value || existing.z2 || null,
+    z3: document.getElementById('zone-z3').value || existing.z3 || null,
+    z4: document.getElementById('zone-z4').value || existing.z4 || null,
+    z5: document.getElementById('zone-z5').value || existing.z5 || null,
+    time: new Date().toLocaleTimeString('en-US',{hour:'2-digit',minute:'2-digit'}),
     date: todayStr()
   };
   await fbSave('readiness', todayStr(), updated);
   showSaved('act-saved');
-  // Refresh home readiness card
   loadReadiness();
+  // Clear inputs after save
+  ['rd-rhr-input','rd-battery-input','rd-sleep-input','rd-steps-input',
+   'zone-z1','zone-z2','zone-z3','zone-z4','zone-z5'].forEach(id => {
+    const el = document.getElementById(id);
+    if(el) el.value = '';
+  });
 }
-window.saveZoneData = saveZoneData;
+window.saveReadiness = saveReadiness;
+// Keep old name for backwards compat
+window.saveZoneData = saveReadiness;
+
+
+// ── ACTIVE EXERCISE QUICK-TAP ────────────────────────────────
+function updateActiveExBar() {
+  const sets = woData.sets || [];
+  // Get unique exercises in order of most recent first
+  const seen = new Set();
+  const activeExercises = [];
+  sets.forEach(s => {
+    if(!seen.has(s.exercise)) {
+      seen.add(s.exercise);
+      activeExercises.push(s.exercise);
+    }
+  });
+
+  const bar = document.getElementById('active-ex-bar');
+  const btns = document.getElementById('active-ex-buttons');
+
+  if(activeExercises.length === 0) {
+    bar.style.display = 'none';
+    return;
+  }
+
+  bar.style.display = 'block';
+  btns.innerHTML = '';
+
+  activeExercises.forEach(ex => {
+    // Get last set for this exercise to pre-fill weight/reps
+    const lastSet = sets.find(s => s.exercise === ex);
+    const btn = document.createElement('button');
+    btn.style.cssText = 'padding:8px 14px;border-radius:20px;border:2px solid var(--orange);background:var(--orange);color:#fff;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;transition:all .15s;white-space:nowrap';
+    btn.innerHTML = `${ex.split(' ').slice(0,2).join(' ')} ${lastSet&&lastSet.weight?'· '+lastSet.weight:''}`;
+    btn.onclick = () => {
+      // Pre-fill the form with this exercise and last set values
+      document.getElementById('wo-ex').value = ex;
+      if(lastSet) {
+        document.getElementById('wo-weight').value = lastSet.weight || '';
+        document.getElementById('wo-reps').value = lastSet.reps || '5';
+      }
+      // Scroll to form
+      document.querySelector('#screen-workout .card').scrollIntoView({behavior:'smooth', block:'center'});
+      // Flash the form
+      const formCard = document.querySelector('#screen-workout .card');
+      formCard.style.border = '2px solid var(--orange)';
+      setTimeout(() => formCard.style.border = '1.5px solid #FF6E0030', 800);
+    };
+    btns.appendChild(btn);
+  });
+}
+
+
+function populateMealDropdown() {
+  const sel = document.getElementById('mpSelect');
+  if(!sel) return;
+  // Clear existing options except first
+  while(sel.options.length > 1) sel.remove(1);
+  const allMeals = [...MEALS, ...customMeals.filter(cm => !MEALS.find(m => m.name === cm.name))];
+  allMeals.forEach(m => {
+    const opt = document.createElement('option');
+    opt.value = m.name;
+    opt.textContent = `${m.emoji} ${m.name} — ${m.protein}g protein · ${m.cals||0} kcal · C:${m.carbs||0}g · F:${m.fat||0}g`;
+    sel.appendChild(opt);
+  });
+}
+
+function selectFromDropdown(sel) {
+  const name = sel.value;
+  if(!name) return;
+  const m = [...MEALS, ...customMeals].find(x => x.name === name);
+  if(!m) { alert('Meal not found: ' + name); return; }
+  document.getElementById('ml-name').value = m.name === 'Custom meal' ? '' : m.name;
+  document.getElementById('ml-protein').value = m.protein || '';
+  document.getElementById('ml-cals').value = m.cals || '';
+  // Show the populated name as confirmation
+  const nameField = document.getElementById('ml-name');
+  nameField.style.borderColor = 'var(--teal)';
+  setTimeout(() => nameField.style.borderColor = '', 1000);
+}
+window.populateMealDropdown = populateMealDropdown;
+window.selectFromDropdown = selectFromDropdown;
 
 // ── BOOT ──────────────────────────────────────────────────────
 window.addEventListener('load',async()=>{
   await new Promise(r=>setTimeout(r,800));
   document.getElementById('loading').style.display='none';
   document.getElementById('screen-home').classList.add('active');
-  await handleShortcutData(); // process any incoming shortcut data first
   await initHome();
 });
 
@@ -2177,6 +2332,8 @@ function toggleQAForm() {
     document.getElementById('qa-name').value = '';
     document.getElementById('qa-protein').value = '';
     document.getElementById('qa-cals').value = '';
+    document.getElementById('qa-carbs').value = '';
+    document.getElementById('qa-fat').value = '';
     document.getElementById('qa-time').value = '';
     document.getElementById('qa-preset-btn').textContent = 'Pick from meal list ▾';
   }
@@ -2192,26 +2349,38 @@ function toggleQAPresets() {
 }
 window.toggleQAPresets = toggleQAPresets;
 
+function selectQAMeal(name) {
+  const m = [...MEALS, ...customMeals].find(x => x.name === name);
+  if(!m) return;
+  document.getElementById('qa-name').value = m.name === 'Custom meal' ? '' : m.name;
+  document.getElementById('qa-protein').value = m.protein || '';
+  document.getElementById('qa-cals').value = m.cals || '';
+  document.getElementById('qa-carbs').value = m.carbs || 0;
+  document.getElementById('qa-fat').value = m.fat || 0;
+  document.getElementById('qa-preset-btn').textContent = m.name === 'Custom meal' ? 'Pick from meal list ▾' : `${m.emoji||'🍽️'} ${m.name}`;
+  showQAPresets = false;
+  document.getElementById('qa-presets').style.display = 'none';
+  document.getElementById('qa-preset-btn').style.borderColor = 'var(--border)';
+  document.getElementById('qa-preset-btn').style.color = 'var(--muted)';
+}
+window.selectQAMeal = selectQAMeal;
+
 function renderQAPresets() {
   const list = document.getElementById('qa-preset-list');
   list.innerHTML = '';
-  // Show all meals + custom saved meals
   const allMeals = [...MEALS, ...customMeals.filter(cm => !MEALS.find(m => m.name === cm.name))];
   allMeals.forEach(m => {
-    const btn = document.createElement('button');
-    btn.className = 'preset-btn';
-    btn.innerHTML = `<span>${m.emoji||'🍽️'}</span><span style="flex:1">${m.name}</span><span style="color:var(--teal);font-weight:700">${m.protein}g</span>`;
-    btn.onclick = () => {
-      document.getElementById('qa-name').value = m.name === 'Custom meal' ? '' : m.name;
-      document.getElementById('qa-protein').value = m.protein || '';
-      document.getElementById('qa-cals').value = m.cals || '';
-      document.getElementById('qa-preset-btn').textContent = m.name === 'Custom meal' ? 'Pick from meal list ▾' : `${m.emoji||'🍽️'} ${m.name}`;
-      showQAPresets = false;
-      document.getElementById('qa-presets').style.display = 'none';
-      document.getElementById('qa-preset-btn').style.borderColor = 'var(--border)';
-      document.getElementById('qa-preset-btn').style.color = 'var(--muted)';
-    };
-    list.appendChild(btn);
+    const safeN = m.name.replace(/'/g, "\'");
+    const row = document.createElement('div');
+    row.style.cssText = 'display:flex;align-items:center;gap:8px;padding:10px 12px;border-radius:8px;border:1px solid var(--border);background:#FAFAF8;cursor:pointer;margin-bottom:4px';
+    row.innerHTML = `<span style="font-size:18px">${m.emoji||'🍽️'}</span>
+      <div style="flex:1">
+        <div style="font-size:13px;font-weight:600;color:var(--text)">${m.name}</div>
+        <div style="font-size:11px;color:var(--muted);margin-top:1px">${m.cals||0} kcal · C:${m.carbs||0}g · F:${m.fat||0}g</div>
+      </div>
+      <div style="color:var(--teal);font-weight:700;font-size:14px;flex-shrink:0">${m.protein}g</div>`;
+    row.addEventListener('click', () => selectQAMeal(m.name));
+    list.appendChild(row);
   });
 }
 
@@ -2220,10 +2389,13 @@ async function quickAddMeal() {
   if(!name) return;
   const protein = Number(document.getElementById('qa-protein').value) || 0;
   const cals = Number(document.getElementById('qa-cals').value) || 0;
+  const carbs = Number(document.getElementById('qa-carbs').value) || 0;
+  const fat   = Number(document.getElementById('qa-fat').value)   || 0;
   const time = document.getElementById('qa-time').value.trim();
-  const emoji = MEALS.find(m => m.name === name)?.emoji || customMeals.find(m => m.name === name)?.emoji || '🍽️';
+  const preset = MEALS.find(m => m.name === name) || customMeals.find(m => m.name === name);
+  const emoji = preset?.emoji || '🍽️';
 
-  const meal = { name, protein, cals, emoji, time, id: Date.now() };
+  const meal = { name, protein, carbs, fat, cals, emoji, time, id: Date.now() };
   mlData.meals = [meal, ...(mlData.meals || [])];
   mlData.date = currentDate;
   await fbSave('meals', currentDate, mlData);
@@ -2346,18 +2518,31 @@ window.quickAddMeal = quickAddMeal;
   <div class="section-label">Today's Extra Activities</div>
   <div id="act-list"></div>
 
-  <!-- Run zone entry (for last run) -->
+  <!-- Garmin Daily Readiness — Manual Entry -->
   <div class="card" style="margin-top:8px;border:1.5px solid #185FA530">
-    <div style="font-size:13px;font-weight:700;color:var(--sky);margin-bottom:12px;text-transform:uppercase;letter-spacing:.05em">Last Run — Zone Data</div>
-    <div style="font-size:12px;color:var(--muted);margin-bottom:12px;line-height:1.5">Enter minutes spent in each zone from your Garmin Connect app after your run. This shows on your home screen readiness card.</div>
-    <div style="display:grid;grid-template-columns:repeat(5,1fr);gap:6px;margin-bottom:10px">
+    <div style="font-size:13px;font-weight:700;color:var(--sky);margin-bottom:4px;text-transform:uppercase;letter-spacing:.05em">Garmin Readiness</div>
+    <div style="font-size:12px;color:var(--muted);margin-bottom:12px;line-height:1.5">Check your watch face or Garmin Connect app and enter today's numbers. Takes 30 seconds.</div>
+
+    <div class="grid2" style="margin-bottom:8px">
+      <div><div class="label">Resting HR (bpm)</div><input class="input" id="rd-rhr-input" placeholder="e.g. 42" type="number"/></div>
+      <div><div class="label">Body Battery</div><input class="input" id="rd-battery-input" placeholder="e.g. 65" type="number"/></div>
+    </div>
+    <div class="grid2" style="margin-bottom:8px">
+      <div><div class="label">Sleep (hours)</div><input class="input" id="rd-sleep-input" placeholder="e.g. 7.2" type="number" step="0.1"/></div>
+      <div><div class="label">Steps today</div><input class="input" id="rd-steps-input" placeholder="e.g. 8432" type="number"/></div>
+    </div>
+
+    <div style="font-size:12px;font-weight:600;color:var(--muted);margin:12px 0 8px;text-transform:uppercase;letter-spacing:.04em">Last Run — Zone Breakdown (minutes)</div>
+    <div style="display:grid;grid-template-columns:repeat(5,1fr);gap:6px;margin-bottom:12px">
       <div><div class="label" style="color:#1D9E75">Z1</div><input class="input" id="zone-z1" placeholder="min" type="number" style="border-color:#1D9E7540"/></div>
       <div><div class="label" style="color:#3B9E1D">Z2</div><input class="input" id="zone-z2" placeholder="min" type="number" style="border-color:#3B9E1D40"/></div>
       <div><div class="label" style="color:#BA7517">Z3</div><input class="input" id="zone-z3" placeholder="min" type="number" style="border-color:#BA751740"/></div>
       <div><div class="label" style="color:#C0392B">Z4</div><input class="input" id="zone-z4" placeholder="min" type="number" style="border-color:#C0392B40"/></div>
       <div><div class="label" style="color:#7B0000">Z5</div><input class="input" id="zone-z5" placeholder="min" type="number" style="border-color:#7B000040"/></div>
     </div>
-    <button class="btn btn-ghost" onclick="saveZoneData()" style="border-color:var(--sky);color:var(--sky)">Save Zone Data</button>
+    <div style="font-size:11px;color:var(--muted);margin-bottom:10px;font-style:italic">Zone data shows on home screen with Zone 2 compliance feedback vs your tested thresholds (VT1 140bpm)</div>
+
+    <button class="btn btn-navy" onclick="saveReadiness()">Save Readiness Data</button>
   </div>
 </div>
 
