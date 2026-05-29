@@ -210,6 +210,20 @@ h3{font-size:14px;font-weight:700;color:var(--navy);margin-bottom:8px}
       <span style="font-size:14px;color:var(--muted)">kcal</span>
     </div>
     <div class="prog-wrap"><div id="home-calbar" class="prog-fill" style="width:0%;background:var(--orange)"></div></div>
+    <div style="display:flex;justify-content:space-around;margin-top:12px;padding-top:12px;border-top:1px solid var(--border)">
+      <div style="text-align:center">
+        <div style="font-size:16px;font-weight:800;color:var(--teal)" id="home-prot2">0g</div>
+        <div style="font-size:10px;color:var(--muted);text-transform:uppercase">Protein</div>
+      </div>
+      <div style="text-align:center">
+        <div style="font-size:16px;font-weight:800;color:var(--orange)" id="home-carbs">0g</div>
+        <div style="font-size:10px;color:var(--muted);text-transform:uppercase">Carbs</div>
+      </div>
+      <div style="text-align:center">
+        <div style="font-size:16px;font-weight:800;color:#BA7517" id="home-fat">0g</div>
+        <div style="font-size:10px;color:var(--muted);text-transform:uppercase">Fat</div>
+      </div>
+    </div>
   </div>
 
   <!-- Action buttons -->
@@ -302,6 +316,29 @@ h3{font-size:14px;font-weight:700;color:var(--navy);margin-bottom:8px}
       <div style="text-align:center">
         <div style="font-size:22px;font-weight:800;color:#fff" id="mp-logged-count">0</div>
         <div style="font-size:10px;color:rgba(255,255,255,.6);text-transform:uppercase;letter-spacing:.04em">logged</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Consumed so far today -->
+  <div class="card" style="background:#fff;border:1.5px solid var(--border);margin-bottom:12px">
+    <div style="font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;margin-bottom:10px">Consumed So Far Today</div>
+    <div class="grid2" style="gap:10px">
+      <div style="text-align:center;padding:8px;background:var(--lg);border-radius:8px">
+        <div style="font-size:20px;font-weight:800;color:var(--navy)" id="mp-cal-consumed">0</div>
+        <div style="font-size:10px;color:var(--muted);text-transform:uppercase">of <span id="mp-cal-goal">—</span> kcal</div>
+      </div>
+      <div style="text-align:center;padding:8px;background:var(--lg);border-radius:8px">
+        <div style="font-size:20px;font-weight:800;color:var(--teal)" id="mp-prot-consumed">0g</div>
+        <div style="font-size:10px;color:var(--muted);text-transform:uppercase">of 110g protein</div>
+      </div>
+      <div style="text-align:center;padding:8px;background:var(--lg);border-radius:8px">
+        <div style="font-size:20px;font-weight:800;color:var(--orange)" id="mp-carb-consumed">0g</div>
+        <div style="font-size:10px;color:var(--muted);text-transform:uppercase">carbs</div>
+      </div>
+      <div style="text-align:center;padding:8px;background:var(--lg);border-radius:8px">
+        <div style="font-size:20px;font-weight:800;color:#BA7517" id="mp-fat-consumed">0g</div>
+        <div style="font-size:10px;color:var(--muted);text-transform:uppercase">fat</div>
       </div>
     </div>
   </div>
@@ -804,6 +841,13 @@ function renderHomeSummary(){
   document.getElementById('home-wtype').textContent=sets.length>0?`sets · ${woData.dayType}`:'not logged';
   document.getElementById('home-wsub').textContent=sets.length>0?`${sets.length} sets · tap to edit`:'Track sets, reps and weights';
 
+  // Macro totals
+  const carbs=meals.reduce((s,m)=>s+(m.carbs||0),0);
+  const fat=meals.reduce((s,m)=>s+(m.fat||0),0);
+  const p2=document.getElementById('home-prot2'); if(p2) p2.textContent=prot+'g';
+  const cb=document.getElementById('home-carbs'); if(cb) cb.textContent=carbs+'g';
+  const ft=document.getElementById('home-fat'); if(ft) ft.textContent=fat+'g';
+
   // Protein
   document.getElementById('home-protein').textContent=prot+'g';
   document.getElementById('home-pbar').style.width=pct+'%';
@@ -904,6 +948,18 @@ async function initMealPlan(){
 
   // Count logged
   document.getElementById('mp-logged-count').textContent=loggedMeals.length;
+
+  // Calculate consumed macros from all logged meals
+  const consumedCals  = loggedMeals.reduce((s,m)=>s+(m.cals||0),0);
+  const consumedProt  = loggedMeals.reduce((s,m)=>s+(m.protein||0),0);
+  const consumedCarbs = loggedMeals.reduce((s,m)=>s+(m.carbs||0),0);
+  const consumedFat   = loggedMeals.reduce((s,m)=>s+(m.fat||0),0);
+  const tt2 = TRAINING_TYPES.find(t=>t.id===checkinData.type);
+  document.getElementById('mp-cal-consumed').textContent  = consumedCals;
+  document.getElementById('mp-cal-goal').textContent      = tt2?tt2.kcal:'—';
+  document.getElementById('mp-prot-consumed').textContent = consumedProt+'g';
+  document.getElementById('mp-carb-consumed').textContent = consumedCarbs+'g';
+  document.getElementById('mp-fat-consumed').textContent  = consumedFat+'g';
 
   // Render slots
   const container=document.getElementById('mp-slots');container.innerHTML='';
@@ -2345,9 +2401,11 @@ function toggleQAPresets() {
 }
 window.toggleQAPresets = toggleQAPresets;
 
+let selectedQAPreset = null;
 function selectQAMeal(name) {
   const m = [...MEALS, ...customMeals].find(x => x.name === name);
   if(!m) return;
+  selectedQAPreset = m;
   document.getElementById('qa-name').value = m.name === 'Custom meal' ? '' : m.name;
   document.getElementById('qa-protein').value = m.protein || '';
   document.getElementById('qa-cals').value = m.cals || '';
@@ -2384,7 +2442,7 @@ async function quickAddMeal() {
   const protein = Number(document.getElementById('qa-protein').value) || 0;
   const cals = Number(document.getElementById('qa-cals').value) || 0;
   const time = document.getElementById('qa-time').value.trim();
-  const preset = MEALS.find(m => m.name === name) || customMeals.find(m => m.name === name);
+  const preset = selectedQAPreset || MEALS.find(m => m.name === name) || customMeals.find(m => m.name === name);
   const emoji = preset?.emoji || '🍽️';
   const carbs = preset?.carbs || 0;
   const fat   = preset?.fat   || 0;
@@ -2396,6 +2454,7 @@ async function quickAddMeal() {
   showSaved('mp-saved');
 
   // Reset and hide form
+  selectedQAPreset = null;
   showQAForm = false;
   showQAPresets = false;
   document.getElementById('qa-form').style.display = 'none';
