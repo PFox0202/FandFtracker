@@ -2447,6 +2447,8 @@ async function quickAddMeal() {
   const carbs = preset?.carbs || 0;
   const fat   = preset?.fat   || 0;
 
+  alert(`DEBUG v2: name=${name}, preset found=${!!preset}, carbs=${carbs}, fat=${fat}`);
+
   const meal = { name, protein, carbs, fat, cals, emoji, time, id: Date.now() };
   mlData.meals = [meal, ...(mlData.meals || [])];
   mlData.date = currentDate;
