@@ -921,7 +921,7 @@ async function initMealPlan(){
         <div style="flex:1">
           <div class="meal-slot-time">${slot.time}${logged?' · ✓ logged':''}</div>
           <div class="meal-slot-name">${logged?logged.name:slot.meals[0]}</div>
-          <div class="meal-slot-macros">${logged?`${logged.protein}g protein · ${logged.cals} kcal${logged.carbs>0?' · C:'+logged.carbs+'g · F:'+(logged.fat||0)+'g':''}`:'~'+slot.protein+'g protein · ~'+slot.cals+' kcal'}</div>
+          <div class="meal-slot-macros">${logged?`${logged.protein}g protein · ${logged.cals} kcal${logged.carbs>0?' · C:'+logged.carbs+'g · F:'+(logged.fat||0)+'g':''}`:(()=>{const pm=MEALS.find(x=>x.name===slot.meals[0]);return '~'+slot.protein+'g protein · ~'+slot.cals+' kcal'+(pm&&pm.carbs!==undefined?' · C:'+pm.carbs+'g · F:'+(pm.fat||0)+'g':'');})()}</div>
           ${!logged?`<div style="font-size:11px;color:var(--muted);margin-top:4px;font-style:italic">${slot.note}</div>`:''}
           ${slot.meals.length>1&&!logged?`<div style="margin-top:8px;display:flex;flex-wrap:wrap;gap:4px">${slot.meals.map(m=>`<span style="background:var(--lg);padding:3px 8px;border-radius:6px;font-size:11px;color:var(--muted)">${m}</span>`).join('')}</div>`:''}
         </div>
