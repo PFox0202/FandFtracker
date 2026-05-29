@@ -2330,9 +2330,7 @@ function toggleQAForm() {
     document.getElementById('qa-name').value = '';
     document.getElementById('qa-protein').value = '';
     document.getElementById('qa-cals').value = '';
-    document.getElementById('qa-carbs').value = '';
-    document.getElementById('qa-fat').value = '';
-    document.getElementById('qa-time').value = '';
+        document.getElementById('qa-time').value = '';
     document.getElementById('qa-preset-btn').textContent = 'Pick from meal list ▾';
   }
 }
@@ -2353,8 +2351,6 @@ function selectQAMeal(name) {
   document.getElementById('qa-name').value = m.name === 'Custom meal' ? '' : m.name;
   document.getElementById('qa-protein').value = m.protein || '';
   document.getElementById('qa-cals').value = m.cals || '';
-  document.getElementById('qa-carbs').value = m.carbs || 0;
-  document.getElementById('qa-fat').value = m.fat || 0;
   document.getElementById('qa-preset-btn').textContent = m.name === 'Custom meal' ? 'Pick from meal list ▾' : `${m.emoji||'🍽️'} ${m.name}`;
   showQAPresets = false;
   document.getElementById('qa-presets').style.display = 'none';
@@ -2387,11 +2383,11 @@ async function quickAddMeal() {
   if(!name) return;
   const protein = Number(document.getElementById('qa-protein').value) || 0;
   const cals = Number(document.getElementById('qa-cals').value) || 0;
-  const carbs = Number(document.getElementById('qa-carbs').value) || 0;
-  const fat   = Number(document.getElementById('qa-fat').value)   || 0;
   const time = document.getElementById('qa-time').value.trim();
   const preset = MEALS.find(m => m.name === name) || customMeals.find(m => m.name === name);
   const emoji = preset?.emoji || '🍽️';
+  const carbs = preset?.carbs || 0;
+  const fat   = preset?.fat   || 0;
 
   const meal = { name, protein, carbs, fat, cals, emoji, time, id: Date.now() };
   mlData.meals = [meal, ...(mlData.meals || [])];
