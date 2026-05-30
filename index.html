@@ -1036,7 +1036,7 @@ async function initMealPlan(){
       info.innerHTML = `
         <div class="meal-slot-time">${m.time || 'Custom'} · ✓ logged</div>
         <div class="meal-slot-name">${m.emoji || '🍽️'} ${m.name}</div>
-        <div class="meal-slot-macros">${m.protein}g protein · ${m.cals || 0} kcal</div>
+        <div class="meal-slot-macros">${m.protein}g protein · ${m.cals || 0} kcal${m.carbs>0?' · C:'+m.carbs+'g · F:'+(m.fat||0)+'g':''}</div>
       `;
 
       const removeBtn = document.createElement('button');
@@ -2452,8 +2452,6 @@ async function quickAddMeal() {
   const emoji = preset?.emoji || '🍽️';
   const carbs = preset?.carbs || 0;
   const fat   = preset?.fat   || 0;
-
-  alert(`DEBUG v2: name=${name}, preset found=${!!preset}, carbs=${carbs}, fat=${fat}`);
 
   const meal = { name, protein, carbs, fat, cals, emoji, time, id: Date.now() };
   mlData.meals = [meal, ...(mlData.meals || [])];
