@@ -468,8 +468,21 @@ h3{font-size:14px;font-weight:700;color:var(--navy);margin-bottom:8px}
       <label for="ml-save-meal" style="font-size:12px;color:var(--muted);cursor:pointer">Save this meal to my list</label>
     </div>
     <button class="btn btn-teal" onclick="addMeal()">+ Log Meal</button>
+    <button class="btn btn-ghost btn-sm" style="margin-top:8px;width:100%" onclick="goto('managemeals')">⚙️ Manage my saved meals</button>
   </div>
   <div id="ml-list"></div>
+</div>
+
+<!-- MANAGE SAVED MEALS -->
+<div id="screen-managemeals" class="screen">
+  <div class="page-header">
+    <button class="back-btn" onclick="goto('meals')">←</button>
+    <div><h2>Manage Saved Meals</h2><div class="subtitle">Remove custom meals you no longer need</div></div>
+  </div>
+  <div class="banner banner-orange" style="margin-bottom:12px">
+    Only your own saved meals appear here. The built-in meal plan presets can't be removed.
+  </div>
+  <div id="manage-meals-list"></div>
 </div>
 
 <!-- TIMER -->
@@ -789,6 +802,7 @@ async function goto(screen){
   if(screen==='recipes')    initRecipes();
   if(screen==='planahead')  await initPlanAhead();
   if(screen==='activity')    await initActivity();
+  if(screen==='managemeals') await initManageMeals();
   window.scrollTo(0,0);
 }
 
@@ -1805,6 +1819,53 @@ function selectFromDropdown(sel) {
 }
 window.populateMealDropdown = populateMealDropdown;
 window.selectFromDropdown = selectFromDropdown;
+
+
+// ── MANAGE SAVED MEALS ────────────────────────────────────────
+async function initManageMeals(){
+  const cm = await fbLoad('custom','meals');
+  customMeals = (cm && cm.list) || [];
+  renderManageMeals();
+}
+
+function renderManageMeals(){
+  const container = document.getElementById('manage-meals-list');
+  if(!customMeals.length){
+    container.innerHTML = '<div style="text-align:center;padding:30px 20px;color:var(--muted);font-size:14px">No saved custom meals yet.<br><span style="font-size:12px">Meals you save with the checkbox will appear here.</span></div>';
+    return;
+  }
+  container.innerHTML = '';
+  customMeals.forEach(m => {
+    const card = document.createElement('div');
+    card.className = 'card';
+    card.style.padding = '12px 14px';
+    card.innerHTML = `
+      <div style="display:flex;align-items:center;gap:10px">
+        <span style="font-size:24px">${m.emoji||'🍽️'}</span>
+        <div style="flex:1">
+          <div style="font-weight:600;font-size:14px;color:var(--navy)">${m.name}</div>
+          <div style="font-size:12px;color:var(--muted);margin-top:2px">${m.protein||0}g protein · ${m.cals||0} kcal · C:${m.carbs||0}g · F:${m.fat||0}g</div>
+        </div>
+        <button class="remove-btn" data-meal="${m.name.replace(/"/g,'&quot;')}">×</button>
+      </div>
+    `;
+    card.querySelector('.remove-btn').addEventListener('click', () => confirmRemoveCustomMeal(m.name));
+    container.appendChild(card);
+  });
+}
+
+function confirmRemoveCustomMeal(name){
+  if(confirm('Remove "' + name + '" from your saved meals?')){
+    removeCustomMeal(name);
+  }
+}
+
+async function removeCustomMeal(name){
+  customMeals = customMeals.filter(m => m.name !== name);
+  await fbSave('custom','meals',{list:customMeals});
+  renderManageMeals();
+}
+window.confirmRemoveCustomMeal = confirmRemoveCustomMeal;
 
 // ── BOOT ──────────────────────────────────────────────────────
 window.addEventListener('load',async()=>{
