@@ -63,12 +63,14 @@ except Exception as e:
 try:
     body_battery = client.get_body_battery(TODAY)
     if body_battery and len(body_battery) > 0:
-        # Get the latest/highest reading of the day
         bb_readings = body_battery[0].get('bodyBatteryValuesArray', [])
         if bb_readings:
-            # Morning reading — first value of the day
-            data['bodyBattery'] = bb_readings[0][1] if bb_readings[0] else None
-            print(f"Body Battery: {data['bodyBattery']}")
+            # Most recent reading at sync time — last entry in the array
+            # Each entry is [timestamp, value]; filter out any null values
+            valid = [r for r in bb_readings if r and len(r) > 1 and r[1] is not None]
+            if valid:
+                data['bodyBattery'] = valid[-1][1]
+                print(f"Body Battery (latest at sync): {data['bodyBattery']}")
 except Exception as e:
     print(f"Body Battery fetch failed: {e}")
 
