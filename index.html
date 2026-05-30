@@ -1474,7 +1474,13 @@ function showSaved(id){const el=document.getElementById(id);if(!el)return;el.tex
 async function loadReadiness(){
   const data = await fbLoad('readiness', todayStr());
   if(!data) {
-    document.getElementById('home-readiness').style.display = 'none';
+    // Show card with waiting message instead of hiding
+    document.getElementById('home-readiness').style.display = 'block';
+    document.getElementById('home-readiness-date').textContent = 'No data yet';
+    ['rd-hr','rd-sleep','rd-battery','rd-steps'].forEach(id=>{
+      const el=document.getElementById(id); if(el) el.textContent='—';
+    });
+    const zonesEl=document.getElementById('rd-zones'); if(zonesEl) zonesEl.style.display='none';
     return;
   }
   document.getElementById('home-readiness').style.display = 'block';
