@@ -2,7 +2,10 @@ name: Garmin Daily Sync
 
 on:
   schedule:
-    - cron: '0 12 * * *'  # 7am EST daily (12:00 UTC)
+    # Hourly 5:30am-9:30pm EDT (UTC-4). 5:30am EDT = 09:30 UTC.
+    # Runs at minute 30 of each hour from 09:30 UTC through 01:30 UTC next day.
+    - cron: '30 9-23 * * *'   # 5:30am - 7:30pm EDT
+    - cron: '30 0-1 * * *'    # 8:30pm - 9:30pm EDT (00:30, 01:30 UTC)
   workflow_dispatch:       # allows manual trigger from GitHub Actions tab
 
 jobs:
