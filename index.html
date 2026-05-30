@@ -365,11 +365,13 @@ h3{font-size:14px;font-weight:700;color:var(--navy);margin-bottom:8px}
           <div id="qa-preset-list"></div>
         </div>
         <input class="input" id="qa-name" placeholder="Meal name" style="margin-bottom:8px"/>
-        <div class="grid3" style="margin-bottom:10px">
+        <div class="grid2" style="margin-bottom:8px">
           <div><div class="label">Protein (g)</div><input class="input" id="qa-protein" placeholder="25" type="number"/></div>
           <div><div class="label">Calories</div><input class="input" id="qa-cals" placeholder="300" type="number"/></div>
-          <div><div class="label">Time</div><input class="input" id="qa-time" placeholder="2pm"/></div>
+          <div><div class="label">Carbs (g)</div><input class="input" id="qa-carbs" placeholder="0" type="number"/></div>
+          <div><div class="label">Fat (g)</div><input class="input" id="qa-fat" placeholder="0" type="number"/></div>
         </div>
+        <div style="margin-bottom:10px"><div class="label">Time</div><input class="input" id="qa-time" placeholder="2pm"/></div>
         <div style="display:flex;gap:8px">
           <button class="btn btn-teal" onclick="quickAddMeal()" style="flex:1">+ Log It</button>
           <button class="btn btn-ghost btn-sm" onclick="toggleQAForm()">Cancel</button>
@@ -454,11 +456,13 @@ h3{font-size:14px;font-weight:700;color:var(--navy);margin-bottom:8px}
       <option value="">— Pick from meal plan presets —</option>
     </select>
     <input class="input" id="ml-name" placeholder="Meal name" style="margin-bottom:8px"/>
-    <div class="grid3" style="margin-bottom:8px">
+    <div class="grid2" style="margin-bottom:8px">
       <div><div class="label">Protein (g)</div><input class="input" id="ml-protein" placeholder="25" type="number"/></div>
       <div><div class="label">Calories</div><input class="input" id="ml-cals" placeholder="300" type="number"/></div>
-      <div><div class="label">Time</div><input class="input" id="ml-time" placeholder="7:30am"/></div>
+      <div><div class="label">Carbs (g)</div><input class="input" id="ml-carbs" placeholder="0" type="number"/></div>
+      <div><div class="label">Fat (g)</div><input class="input" id="ml-fat" placeholder="0" type="number"/></div>
     </div>
+    <div style="margin-bottom:8px"><div class="label">Time</div><input class="input" id="ml-time" placeholder="7:30am"/></div>
     <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px">
       <input type="checkbox" id="ml-save-meal" style="width:16px;height:16px;accent-color:var(--teal)"/>
       <label for="ml-save-meal" style="font-size:12px;color:var(--muted);cursor:pointer">Save this meal to my list</label>
@@ -1217,9 +1221,12 @@ function toggleMP(){}
 function selectMLMeal(name) {
   const m = [...MEALS, ...customMeals].find(x => x.name === name);
   if(!m) return;
-  document.getElementById('ml-name').value = m.name==='Custom meal' ? '' : m.name;
-  document.getElementById('ml-protein').value = m.protein || '';
-  document.getElementById('ml-cals').value = m.cals || '';
+  const isCustom = m.name==='Custom meal';
+  document.getElementById('ml-name').value = isCustom ? '' : m.name;
+  document.getElementById('ml-protein').value = isCustom ? '' : (m.protein || '');
+  document.getElementById('ml-cals').value = isCustom ? '' : (m.cals || '');
+  const mc=document.getElementById('ml-carbs'); if(mc) mc.value = isCustom ? '' : (m.carbs || '');
+  const mf=document.getElementById('ml-fat'); if(mf) mf.value = isCustom ? '' : (m.fat || '');
   showMP = false;
 }
 window.selectMLMeal = selectMLMeal;
@@ -1274,13 +1281,15 @@ async function addMeal(){
   if(!name){ alert('No meal name found - please type a name or select from dropdown'); return; }
   const protein=Number(document.getElementById('ml-protein').value)||0;
   const cals=Number(document.getElementById('ml-cals').value)||0;
+  const mlCarbsField=document.getElementById('ml-carbs');
+  const mlFatField=document.getElementById('ml-fat');
+  const carbs=mlCarbsField?(Number(mlCarbsField.value)||0):0;
+  const fat=mlFatField?(Number(mlFatField.value)||0):0;
   const preset=selectedMealPreset||(MEALS.find(m=>m.name===name)||customMeals.find(m=>m.name===name));
   const emoji=preset?.emoji||'🍽️';
-  const carbs=preset?.carbs||0;
-  const fat=preset?.fat||0;
-  // Save custom meal if checked
+  // Save custom meal if checked — includes full macros
   if(document.getElementById('ml-save-meal').checked&&!customMeals.find(m=>m.name===name)){
-    customMeals=[{name,protein,cals,emoji},...customMeals];
+    customMeals=[{name,protein,carbs,fat,cals,emoji},...customMeals];
     await fbSave('custom','meals',{list:customMeals});
   }
   const meal={name,protein,carbs,fat,cals,emoji,time:document.getElementById('ml-time').value.trim(),id:Date.now()};
@@ -1290,6 +1299,8 @@ async function addMeal(){
   document.getElementById('ml-name').value='';
   document.getElementById('ml-protein').value='';
   document.getElementById('ml-cals').value='';
+  const mlc=document.getElementById('ml-carbs'); if(mlc) mlc.value='';
+  const mlf=document.getElementById('ml-fat'); if(mlf) mlf.value='';
   document.getElementById('ml-time').value='';
   document.getElementById('ml-save-meal').checked=false;
   const mpSel = document.getElementById('mpSelect');
@@ -2392,8 +2403,11 @@ function toggleQAForm() {
     document.getElementById('qa-name').value = '';
     document.getElementById('qa-protein').value = '';
     document.getElementById('qa-cals').value = '';
-        document.getElementById('qa-time').value = '';
+    const qc=document.getElementById('qa-carbs'); if(qc) qc.value='';
+    const qf=document.getElementById('qa-fat'); if(qf) qf.value='';
+    document.getElementById('qa-time').value = '';
     document.getElementById('qa-preset-btn').textContent = 'Pick from meal list ▾';
+    selectedQAPreset = null;
   }
 }
 window.toggleQAForm = toggleQAForm;
@@ -2411,11 +2425,14 @@ let selectedQAPreset = null;
 function selectQAMeal(name) {
   const m = [...MEALS, ...customMeals].find(x => x.name === name);
   if(!m) return;
-  selectedQAPreset = m;
-  document.getElementById('qa-name').value = m.name === 'Custom meal' ? '' : m.name;
-  document.getElementById('qa-protein').value = m.protein || '';
-  document.getElementById('qa-cals').value = m.cals || '';
-  document.getElementById('qa-preset-btn').textContent = m.name === 'Custom meal' ? 'Pick from meal list ▾' : `${m.emoji||'🍽️'} ${m.name}`;
+  const isCustom = m.name === 'Custom meal';
+  selectedQAPreset = isCustom ? null : m;
+  document.getElementById('qa-name').value = isCustom ? '' : m.name;
+  document.getElementById('qa-protein').value = isCustom ? '' : (m.protein || '');
+  document.getElementById('qa-cals').value = isCustom ? '' : (m.cals || '');
+  document.getElementById('qa-carbs').value = isCustom ? '' : (m.carbs || '');
+  document.getElementById('qa-fat').value = isCustom ? '' : (m.fat || '');
+  document.getElementById('qa-preset-btn').textContent = isCustom ? '✏️ Custom meal — enter values below' : `${m.emoji||'🍽️'} ${m.name}`;
   showQAPresets = false;
   document.getElementById('qa-presets').style.display = 'none';
   document.getElementById('qa-preset-btn').style.borderColor = 'var(--border)';
@@ -2447,11 +2464,14 @@ async function quickAddMeal() {
   if(!name) return;
   const protein = Number(document.getElementById('qa-protein').value) || 0;
   const cals = Number(document.getElementById('qa-cals').value) || 0;
+  // Read carbs/fat directly from the form fields (works for both preset and custom)
+  const carbsField = document.getElementById('qa-carbs');
+  const fatField   = document.getElementById('qa-fat');
+  const carbs = carbsField ? (Number(carbsField.value) || 0) : 0;
+  const fat   = fatField   ? (Number(fatField.value)   || 0) : 0;
   const time = document.getElementById('qa-time').value.trim();
   const preset = selectedQAPreset || MEALS.find(m => m.name === name) || customMeals.find(m => m.name === name);
   const emoji = preset?.emoji || '🍽️';
-  const carbs = preset?.carbs || 0;
-  const fat   = preset?.fat   || 0;
 
   const meal = { name, protein, carbs, fat, cals, emoji, time, id: Date.now() };
   mlData.meals = [meal, ...(mlData.meals || [])];
