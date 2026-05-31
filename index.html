@@ -217,11 +217,11 @@ h3{font-size:14px;font-weight:700;color:var(--navy);margin-bottom:8px}
       </div>
       <div style="text-align:center">
         <div style="font-size:16px;font-weight:800;color:var(--orange)" id="home-carbs">0g</div>
-        <div style="font-size:10px;color:var(--muted);text-transform:uppercase">Carbs</div>
+        <div style="font-size:10px;color:var(--muted);text-transform:uppercase">Carbs<span id="home-carb-goal"></span></div>
       </div>
       <div style="text-align:center">
         <div style="font-size:16px;font-weight:800;color:#BA7517" id="home-fat">0g</div>
-        <div style="font-size:10px;color:var(--muted);text-transform:uppercase">Fat</div>
+        <div style="font-size:10px;color:var(--muted);text-transform:uppercase">Fat<span id="home-fat-goal"></span></div>
       </div>
     </div>
   </div>
@@ -334,11 +334,11 @@ h3{font-size:14px;font-weight:700;color:var(--navy);margin-bottom:8px}
       </div>
       <div style="text-align:center;padding:8px;background:var(--lg);border-radius:8px">
         <div style="font-size:20px;font-weight:800;color:var(--orange)" id="mp-carb-consumed">0g</div>
-        <div style="font-size:10px;color:var(--muted);text-transform:uppercase">carbs</div>
+        <div style="font-size:10px;color:var(--muted);text-transform:uppercase">of <span id="mp-carb-goal">—</span> carbs</div>
       </div>
       <div style="text-align:center;padding:8px;background:var(--lg);border-radius:8px">
         <div style="font-size:20px;font-weight:800;color:#BA7517" id="mp-fat-consumed">0g</div>
-        <div style="font-size:10px;color:var(--muted);text-transform:uppercase">fat</div>
+        <div style="font-size:10px;color:var(--muted);text-transform:uppercase">of <span id="mp-fat-goal">—</span> fat</div>
       </div>
     </div>
   </div>
@@ -587,12 +587,12 @@ const db=firebase.firestore();
 const HEIGHT_IN = 65; // 5ft 5in
 
 const TRAINING_TYPES=[
-  {id:'rest',       label:'Rest Day',                          sub:'Saturday · lower calories · fat burning mode',     emoji:'😴', kcal:1800, slots:'rest'},
-  {id:'gym',        label:'Gym class only',                    sub:'6am class · no pre-class addition',                emoji:'🏋️', kcal:1900, slots:'gym'},
-  {id:'preclass',   label:'Pre-class strength + gym',          sub:'Arrive 5:40am · strength then class',              emoji:'💪', kcal:2000, slots:'preclass'},
-  {id:'gymrun',     label:'Gym + evening run',                 sub:'6am gym · run in the evening',                     emoji:'🏃', kcal:2100, slots:'gymrun',   hasRun:true},
-  {id:'preclassrun',label:'Pre-class + gym + evening run',     sub:'Full day · biggest calorie need',                  emoji:'🔥', kcal:2300, slots:'preclassrun', hasRun:true},
-  {id:'conditioning',label:'Sunday conditioning',             sub:'Full body conditioning class',                      emoji:'⚡', kcal:2050, slots:'conditioning'},
+  {id:'rest',       label:'Rest Day',                          sub:'Saturday · lower calories · fat burning mode',     emoji:'😴', kcal:1800, carbs:130, fat:55, slots:'rest'},
+  {id:'gym',        label:'Gym class only',                    sub:'6am class · no pre-class addition',                emoji:'🏋️', kcal:1900, carbs:190, fat:58, slots:'gym'},
+  {id:'preclass',   label:'Pre-class strength + gym',          sub:'Arrive 5:40am · strength then class',              emoji:'💪', kcal:2000, carbs:210, fat:60, slots:'preclass'},
+  {id:'gymrun',     label:'Gym + evening run',                 sub:'6am gym · run in the evening',                     emoji:'🏃', kcal:2100, carbs:230, fat:60, slots:'gymrun',   hasRun:true},
+  {id:'preclassrun',label:'Pre-class + gym + evening run',     sub:'Full day · biggest calorie need',                  emoji:'🔥', kcal:2300, carbs:265, fat:62, slots:'preclassrun', hasRun:true},
+  {id:'conditioning',label:'Sunday conditioning',             sub:'Full body conditioning class',                      emoji:'⚡', kcal:2050, carbs:220, fat:60, slots:'conditioning'},
 ];
 
 
@@ -865,6 +865,11 @@ function renderHomeSummary(){
   const p2=document.getElementById('home-prot2'); if(p2) p2.textContent=prot+'g';
   const cb=document.getElementById('home-carbs'); if(cb) cb.textContent=carbs+'g';
   const ft=document.getElementById('home-fat'); if(ft) ft.textContent=fat+'g';
+  // Show carb/fat goals based on today's training type
+  if(tt&&tt.carbs){
+    const cg=document.getElementById('home-carb-goal'); if(cg) cg.textContent=' / '+tt.carbs+'g';
+    const fg=document.getElementById('home-fat-goal'); if(fg) fg.textContent=' / '+tt.fat+'g';
+  }
 
   // Protein
   document.getElementById('home-protein').textContent=prot+'g';
@@ -978,6 +983,8 @@ async function initMealPlan(){
   document.getElementById('mp-prot-consumed').textContent = consumedProt+'g';
   document.getElementById('mp-carb-consumed').textContent = consumedCarbs+'g';
   document.getElementById('mp-fat-consumed').textContent  = consumedFat+'g';
+  document.getElementById('mp-carb-goal').textContent     = tt2&&tt2.carbs?tt2.carbs+'g':'—';
+  document.getElementById('mp-fat-goal').textContent      = tt2&&tt2.fat?tt2.fat+'g':'—';
 
   // Render slots
   const container=document.getElementById('mp-slots');container.innerHTML='';
