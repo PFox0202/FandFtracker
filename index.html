@@ -343,11 +343,14 @@ h3{font-size:14px;font-weight:700;color:var(--navy);margin-bottom:8px}
     </div>
   </div>
 
+  <!-- Plan vs target gap suggestion -->
+  <div class="card" id="mp-gap-suggestion" style="background:#fff;border:1.5px solid var(--border);margin-bottom:12px"></div>
+
   <div id="mp-no-checkin" style="display:none">
-    <div class="banner banner-orange">
-      ⚡ Log your training first so we can show the right meal plan and timing for today.
+    <div class="banner banner-orange" style="font-size:13px">
+      💡 Log today's training to fine-tune your calorie and macro targets. Your meals show either way.
     </div>
-    <button class="btn btn-navy" onclick="goto('checkin')">Log Today's Training</button>
+    <button class="btn btn-ghost btn-sm" onclick="goto('checkin')">Log Training (optional)</button>
   </div>
 
   <div id="mp-slots"></div>
@@ -626,6 +629,87 @@ const MEAL_INGREDIENTS = {
   'Peach + cottage cheese':        ['Peach (1)', 'Protein cottage cheese (113g)'],
   'Cottage cheese + walnuts':      ['Protein cottage cheese (113g)', 'Walnuts (15g)', 'Honey'],
 };
+
+
+// ── FIXED WEEKLY MEAL PLAN (by day of week) ───────────────────
+// Dietary rotation: Sun=meat, Mon/Wed/Fri=vegan, Tue/Thu/Sat=vegetarian
+// Meals are diet-correct and roughly on target; gap suggestions handle daily adjustment
+const WEEKLY_PLAN = {
+  0: { day:'Sunday', diet:'Meat', dietColor:'#712B13', dietBg:'#FFF0EE', defaultTraining:'conditioning',
+    meals:[
+      {time:'Pre-class', name:'Banana + dates', protein:2, carbs:58, fat:1, cals:234},
+      {time:'Post-class', name:'Protein shake + salmon scrambled eggs', protein:58, carbs:28, fat:18, cals:606},
+      {time:'Lunch · 11am-12pm', name:'Chicken quinoa bowl', protein:47, carbs:52, fat:18, cals:607},
+      {time:'Snack · 1-2pm', name:'Cottage cheese + fruit + walnuts', protein:15, carbs:18, fat:11, cals:247},
+      {time:'Evening · 8-9pm', name:'Cottage cheese bowl', protein:12, carbs:8, fat:6, cals:132},
+    ]},
+  1: { day:'Monday', diet:'Vegan', dietColor:'#085041', dietBg:'#F3FBF7', defaultTraining:'preclass',
+    meals:[
+      {time:'Pre-gym · 5:40am', name:'Banana + dates', protein:2, carbs:58, fat:1, cals:234},
+      {time:'Post-gym · 7-8am', name:'Pea shake + tofu scramble', protein:46, carbs:38, fat:12, cals:504},
+      {time:'Lunch · 11am', name:'Tempeh grain bowl', protein:43, carbs:78, fat:24, cals:720},
+      {time:'Snack · 1-2pm', name:'Edamame + protein ice cream', protein:31, carbs:28, fat:8, cals:349},
+      {time:'Evening · 8-9pm', name:'Cottage cheese bowl', protein:12, carbs:8, fat:6, cals:132},
+    ]},
+  2: { day:'Tuesday', diet:'Vegetarian', dietColor:'#27500A', dietBg:'#F4FAF0', defaultTraining:'preclass',
+    meals:[
+      {time:'Pre-gym · 5:40am', name:'Banana + dates', protein:2, carbs:58, fat:1, cals:234},
+      {time:'Post-gym · 7-8am', name:'Protein shake + frittata', protein:52, carbs:18, fat:22, cals:573},
+      {time:'Lunch · 11am', name:'Chickpea feta wrap', protein:24, carbs:62, fat:18, cals:577},
+      {time:'Snack · 1-2pm', name:'Greek yogurt + granola', protein:19, carbs:42, fat:10, cals:470},
+      {time:'Evening · 8-9pm', name:'Cottage cheese bowl', protein:12, carbs:8, fat:6, cals:132},
+    ]},
+  3: { day:'Wednesday', diet:'Vegan', dietColor:'#085041', dietBg:'#F3FBF7', defaultTraining:'preclassrun',
+    meals:[
+      {time:'Pre-gym · 5:40am', name:'Banana + dates', protein:2, carbs:58, fat:1, cals:234},
+      {time:'Post-gym · 7-8am', name:'Pea shake + overnight oats', protein:52, carbs:68, fat:16, cals:758},
+      {time:'Lunch · 11am', name:'Black bean quinoa bowl', protein:18, carbs:72, fat:8, cals:399},
+      {time:'Pre-run · 1:30pm', name:'Edamame + pea protein', protein:31, carbs:16, fat:8, cals:254},
+      {time:'Post-run', name:'Tempeh Buddha bowl', protein:33, carbs:38, fat:22, cals:489},
+      {time:'Evening · 8-9pm', name:'Cottage cheese bowl', protein:12, carbs:8, fat:6, cals:132},
+    ]},
+  4: { day:'Thursday', diet:'Vegetarian', dietColor:'#27500A', dietBg:'#F4FAF0', defaultTraining:'preclass',
+    meals:[
+      {time:'Pre-gym · 5:40am', name:'Banana + dates', protein:2, carbs:58, fat:1, cals:234},
+      {time:'Post-gym · 7-8am', name:'Protein shake + yogurt parfait', protein:54, carbs:72, fat:18, cals:863},
+      {time:'Lunch · 11am', name:'Chickpea curry + naan', protein:28, carbs:72, fat:18, cals:664},
+      {time:'Snack · 1-2pm', name:'Peach + cottage cheese', protein:14, carbs:18, fat:2, cals:169},
+      {time:'Evening · 8-9pm', name:'Cottage cheese bowl', protein:12, carbs:8, fat:6, cals:132},
+    ]},
+  5: { day:'Friday', diet:'Vegan', dietColor:'#085041', dietBg:'#F3FBF7', defaultTraining:'preclass',
+    meals:[
+      {time:'Pre-gym · 5:40am', name:'Banana + dates', protein:2, carbs:58, fat:1, cals:234},
+      {time:'Post-gym · 7-8am', name:'Pea shake + overnight oats', protein:52, carbs:68, fat:16, cals:758},
+      {time:'Lunch · 11am', name:'Tempeh Buddha bowl', protein:33, carbs:38, fat:22, cals:489},
+      {time:'Snack · 1-2pm', name:'Edamame + pea protein + walnuts', protein:31, carbs:18, fat:26, cals:360},
+      {time:'Evening · 8-9pm', name:'Cottage cheese bowl', protein:12, carbs:8, fat:6, cals:132},
+    ]},
+  6: { day:'Saturday', diet:'Vegetarian', dietColor:'#27500A', dietBg:'#F4FAF0', defaultTraining:'rest',
+    meals:[
+      {time:'Breakfast · 8-9am', name:'Protein shake + frittata', protein:52, carbs:18, fat:22, cals:573},
+      {time:'Lunch · 11am', name:'Chickpea feta wrap', protein:24, carbs:62, fat:18, cals:577},
+      {time:'Snack · 1-2pm', name:'Apple + almond butter + almonds', protein:8, carbs:38, fat:18, cals:309},
+      {time:'Close window · 3pm', name:'Cottage cheese + walnuts', protein:15, carbs:18, fat:11, cals:247},
+    ]},
+};
+
+// Generate plain-language suggestion to close a macro gap
+function macroSuggestion(calGap, carbGap, protGap, fatGap){
+  if(calGap <= 50 && calGap >= -50) return 'Your meals match today\'s target well — eat as planned.';
+  if(calGap > 50){
+    // Short — suggest additions
+    const adds = [];
+    if(carbGap > 25) adds.push('a cup of rice or an extra banana');
+    else if(carbGap > 10) adds.push('a small portion of rice or fruit');
+    if(protGap > 10) adds.push('an extra protein scoop');
+    if(fatGap > 12) adds.push('a small handful of nuts');
+    if(!adds.length) adds.push('a slightly bigger portion at lunch');
+    return `You're about ${calGap} kcal short today — add ${adds.join(' and ')} to close the gap.`;
+  } else {
+    // Over — suggest reductions
+    return `You're about ${Math.abs(calGap)} kcal over today — consider skipping the afternoon snack or halving a portion.`;
+  }
+}
 
 // Recipe tab key mapping — links meal slots to recipe tab
 const SLOT_RECIPE_TAB = {
@@ -938,141 +1022,135 @@ async function initMealPlan(){
   const[c,m]=await Promise.all([fbLoad('checkin',currentDate),fbLoad('meals',currentDate)]);
   checkinData=c||null;
   mlData=m||{meals:[]};
-
-  if(!checkinData){
-    document.getElementById('mp-no-checkin').style.display='block';
-    document.getElementById('mp-slots').innerHTML='';
-    document.getElementById('mp-cal-target').textContent='—';
-    document.getElementById('mp-logged-count').textContent='0';
-    return;
-  }
-  document.getElementById('mp-no-checkin').style.display='none';
-
-  const tt=TRAINING_TYPES.find(t=>t.id===checkinData.type);
-  document.getElementById('mp-cal-target').textContent=tt.kcal;
-  document.getElementById('mp-training-banner').innerHTML=`<div class="banner banner-blue" style="margin-bottom:12px">📋 ${tt.emoji} ${tt.label} · ${tt.kcal} kcal target · ${tt.slots==='gymrun'||tt.slots==='preclassrun'?'Double session day — pre-run snack included':'Tap any meal slot to log it'}</div>`;
-
-  // Get slots
-  const slots=SLOT_TEMPLATES[tt.slots]||[];
   const loggedMeals=mlData.meals||[];
 
-  // Update run time labels
-  if(checkinData.runTime){
-    const[h,min]=checkinData.runTime.split(':').map(Number);
-    const preRunH=h>1?h-1:h;
-    const preRunTime=`${preRunH>12?preRunH-12:preRunH}:${String(min).padStart(2,'0')}${preRunH>=12?'pm':'am'}`;
-    const postRunH=h+1;
-    const postRunTime=`${postRunH>12?postRunH-12:postRunH}:${String(min).padStart(2,'0')}${postRunH>=12?'pm':'am'}`;
-    slots.forEach(s=>{
-      if(s.id==='prerun')s.time=preRunTime;
-      if(s.id==='postrun')s.time=postRunTime;
-    });
+  // Gentle optional training prompt (doesn't block meals)
+  const noCheckinEl=document.getElementById('mp-no-checkin');
+  if(noCheckinEl) noCheckinEl.style.display = checkinData ? 'none' : 'block';
+
+  // Determine day of week for the currentDate
+  const dateObj = new Date(currentDate + 'T12:00:00');
+  const dow = dateObj.getDay();
+  const dayPlan = WEEKLY_PLAN[dow];
+
+  // Diet banner
+  const banner = document.getElementById('mp-training-banner');
+  if(banner){
+    banner.style.display = 'block';
+    banner.style.background = dayPlan.dietBg;
+    banner.style.color = dayPlan.dietColor;
+    banner.innerHTML = `<strong>${dayPlan.day}</strong> · ${dayPlan.diet} day`;
   }
 
-  // Count logged
-  document.getElementById('mp-logged-count').textContent=loggedMeals.length;
+  // Targets — from checkin training type if set, else day's default training
+  const trainingId = checkinData ? checkinData.type : dayPlan.defaultTraining;
+  const tt = TRAINING_TYPES.find(t=>t.id===trainingId) || TRAINING_TYPES.find(t=>t.id===dayPlan.defaultTraining);
+  const calTarget = tt ? tt.kcal : 2000;
+  const carbTarget = tt && tt.carbs ? tt.carbs : 210;
+  const fatTarget = tt && tt.fat ? tt.fat : 60;
+  const protTarget = 110;
 
-  // Calculate consumed macros from all logged meals
-  const consumedCals  = loggedMeals.reduce((s,m)=>s+(m.cals||0),0);
-  const consumedProt  = loggedMeals.reduce((s,m)=>s+(m.protein||0),0);
-  const consumedCarbs = loggedMeals.reduce((s,m)=>s+(m.carbs||0),0);
-  const consumedFat   = loggedMeals.reduce((s,m)=>s+(m.fat||0),0);
-  const tt2 = TRAINING_TYPES.find(t=>t.id===checkinData.type);
+  document.getElementById('mp-cal-target').textContent = calTarget;
+  document.getElementById('mp-prot-target').textContent = protTarget + 'g';
+  document.getElementById('mp-logged-count').textContent = loggedMeals.length;
+
+  // What the day's planned meals provide
+  const planMeals = dayPlan.meals;
+  const planCals  = planMeals.reduce((s,x)=>s+x.cals,0);
+  const planProt  = planMeals.reduce((s,x)=>s+x.protein,0);
+  const planCarbs = planMeals.reduce((s,x)=>s+x.carbs,0);
+  const planFat   = planMeals.reduce((s,x)=>s+x.fat,0);
+
+  // What's actually been logged
+  const consumedCals  = loggedMeals.reduce((s,x)=>s+(x.cals||0),0);
+  const consumedProt  = loggedMeals.reduce((s,x)=>s+(x.protein||0),0);
+  const consumedCarbs = loggedMeals.reduce((s,x)=>s+(x.carbs||0),0);
+  const consumedFat   = loggedMeals.reduce((s,x)=>s+(x.fat||0),0);
+
+  // Update consumed-so-far card
   document.getElementById('mp-cal-consumed').textContent  = consumedCals;
-  document.getElementById('mp-cal-goal').textContent      = tt2?tt2.kcal:'—';
+  document.getElementById('mp-cal-goal').textContent      = calTarget;
   document.getElementById('mp-prot-consumed').textContent = consumedProt+'g';
   document.getElementById('mp-carb-consumed').textContent = consumedCarbs+'g';
   document.getElementById('mp-fat-consumed').textContent  = consumedFat+'g';
-  document.getElementById('mp-carb-goal').textContent     = tt2&&tt2.carbs?tt2.carbs+'g':'—';
-  document.getElementById('mp-fat-goal').textContent      = tt2&&tt2.fat?tt2.fat+'g':'—';
+  document.getElementById('mp-carb-goal').textContent     = carbTarget+'g';
+  document.getElementById('mp-fat-goal').textContent      = fatTarget+'g';
 
-  // Render slots
+  // Gap analysis: plan vs target → suggestion
+  const calGap  = calTarget - planCals;
+  const carbGap = carbTarget - planCarbs;
+  const protGap = protTarget - planProt;
+  const fatGap  = fatTarget - planFat;
+
+  const gapEl = document.getElementById('mp-gap-suggestion');
+  if(gapEl){
+    const suggestion = macroSuggestion(calGap, carbGap, protGap, fatGap);
+    gapEl.innerHTML = `
+      <div style="font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;margin-bottom:8px">Today's Plan vs Target</div>
+      <div style="display:flex;justify-content:space-around;margin-bottom:10px;font-size:12px">
+        <div style="text-align:center"><div style="font-weight:700;color:var(--navy)">${planCals}</div><div style="color:var(--muted)">of ${calTarget} kcal</div></div>
+        <div style="text-align:center"><div style="font-weight:700;color:var(--teal)">${planProt}g</div><div style="color:var(--muted)">of ${protTarget}g protein</div></div>
+        <div style="text-align:center"><div style="font-weight:700;color:var(--orange)">${planCarbs}g</div><div style="color:var(--muted)">of ${carbTarget}g carbs</div></div>
+        <div style="text-align:center"><div style="font-weight:700;color:#BA7517">${planFat}g</div><div style="color:var(--muted)">of ${fatTarget}g fat</div></div>
+      </div>
+      <div style="background:var(--cream);border-radius:8px;padding:10px 12px;font-size:13px;color:var(--text);line-height:1.5">💡 ${suggestion}</div>
+    `;
+  }
+
+  // Render the day's meal slots
   const container=document.getElementById('mp-slots');container.innerHTML='';
-  let totalProt=0,totalCals=0;
-  slots.forEach(slot=>{
-    // Check if this slot was already logged
-    const logged=loggedMeals.find(m=>m.slotId===slot.id);
-    totalProt+=(logged?logged.protein:0);
-    totalCals+=(logged?logged.cals:0);
-
+  planMeals.forEach((meal,i)=>{
+    const logged = loggedMeals.find(lm => lm.slotIndex===i && lm.slotDay===dow);
     const div=document.createElement('div');
     div.className='meal-slot'+(logged?' meal-slot-logged':'');
     div.innerHTML=`
       <div style="display:flex;justify-content:space-between;align-items:flex-start">
         <div style="flex:1">
-          <div class="meal-slot-time">${slot.time}${logged?' · ✓ logged':''}</div>
-          <div class="meal-slot-name">${logged?logged.name:slot.meals[0]}</div>
-          <div class="meal-slot-macros">${logged?`${logged.protein}g protein · ${logged.cals} kcal${logged.carbs>0?' · C:'+logged.carbs+'g · F:'+(logged.fat||0)+'g':''}`:(()=>{const pm=MEALS.find(x=>x.name===slot.meals[0]);return '~'+slot.protein+'g protein · ~'+slot.cals+' kcal'+(pm&&pm.carbs!==undefined?' · C:'+pm.carbs+'g · F:'+(pm.fat||0)+'g':'');})()}</div>
-          ${!logged?`<div style="font-size:11px;color:var(--muted);margin-top:4px;font-style:italic">${slot.note}</div>`:''}
-          ${slot.meals.length>1&&!logged?`<div style="margin-top:8px;display:flex;flex-wrap:wrap;gap:4px">${slot.meals.map(m=>`<span style="background:var(--lg);padding:3px 8px;border-radius:6px;font-size:11px;color:var(--muted)">${m}</span>`).join('')}</div>`:''}
+          <div class="meal-slot-time">${meal.time}${logged?' · ✓ logged':''}</div>
+          <div class="meal-slot-name">${meal.name}</div>
+          <div class="meal-slot-macros">${meal.protein}g protein · ${meal.cals} kcal · C:${meal.carbs}g · F:${meal.fat}g</div>
         </div>
-        ${logged?`<button onclick="removeSlotMeal('${slot.id}')" style="background:none;border:1.5px solid #C0392B30;border-radius:8px;color:#C0392B;font-size:18px;cursor:pointer;padding:2px 8px;line-height:1;flex-shrink:0;margin-left:10px;font-family:inherit" title="Remove this meal">×</button>`:''}
+        ${logged?`<button class="remove-btn" data-idx="${i}">×</button>`:''}
       </div>
     `;
-    if(!logged){
-      div.onclick=()=>quickLogSlot(slot);
-      // Add recipe link button
-      const recipeTag = SLOT_RECIPE_TAB[slot.id] || 'meat';
-      const recipeBtn = document.createElement('button');
-      recipeBtn.style.cssText = 'margin-top:8px;padding:5px 12px;border-radius:8px;border:1px solid var(--border);background:var(--lg);color:var(--muted);font-size:11px;font-weight:600;cursor:pointer;font-family:inherit;display:flex;align-items:center;gap:5px';
-      recipeBtn.innerHTML = '📖 View recipe';
-      recipeBtn.onclick = (e) => {
-        e.stopPropagation();
-        goto('recipes');
-        setTimeout(() => {
-          showRecipeTab(recipeTab(slot));
-          // Scroll to matching recipe
-          const cards = document.querySelectorAll('#recipe-' + recipeTab(slot) + ' .card');
-          cards.forEach(c => {
-            if (c.textContent.includes(slot.meals[0].split(' ')[0])) {
-              c.scrollIntoView({behavior:'smooth', block:'center'});
-              c.style.border = '2px solid var(--orange)';
-              setTimeout(() => c.style.border = '1px solid var(--border)', 2000);
-            }
-          });
-        }, 300);
-      };
+    if(logged){
+      const rb=div.querySelector('.remove-btn');
+      if(rb) rb.addEventListener('click', async (e)=>{ e.stopPropagation(); await removeDayMeal(i, dow); });
+    } else {
+      div.addEventListener('click', ()=>quickLogDayMeal(meal, i, dow));
+      // recipe link
+      const recipeBtn=document.createElement('button');
+      recipeBtn.style.cssText='margin-top:8px;padding:5px 12px;border-radius:8px;border:1px solid var(--border);background:var(--lg);color:var(--muted);font-size:11px;font-weight:600;cursor:pointer;font-family:inherit';
+      recipeBtn.innerHTML='📖 View recipe';
+      recipeBtn.addEventListener('click',(e)=>{ e.stopPropagation(); goto('recipes'); });
       div.appendChild(recipeBtn);
     }
     container.appendChild(div);
   });
 
-  // Update protein target display
-  document.getElementById('mp-prot-target').textContent='110g';
-
-  // Show any manually logged meals that don't belong to a slot
-  const slotIds = slots.map(s => s.id);
-  const customLogged = loggedMeals.filter(m => !m.slotId || !slotIds.includes(m.slotId));
-  if(customLogged.length > 0){
-    const heading = document.createElement('div');
-    heading.style.cssText = 'font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;margin:16px 0 8px';
-    heading.textContent = 'Additional meals logged';
+  // Additional logged meals not part of the day plan
+  const customLogged = loggedMeals.filter(lm => lm.slotIndex===undefined || lm.slotDay!==dow);
+  if(customLogged.length>0){
+    const heading=document.createElement('div');
+    heading.style.cssText='font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;margin:16px 0 8px';
+    heading.textContent='Additional meals logged';
     container.appendChild(heading);
-
-    customLogged.forEach(m => {
-      const div = document.createElement('div');
-      div.className = 'meal-slot meal-slot-logged';
-
-      const inner = document.createElement('div');
-      inner.style.cssText = 'display:flex;justify-content:space-between;align-items:flex-start';
-
-      const info = document.createElement('div');
-      info.style.flex = '1';
-      info.innerHTML = `
-        <div class="meal-slot-time">${m.time || 'Custom'} · ✓ logged</div>
-        <div class="meal-slot-name">${m.emoji || '🍽️'} ${m.name}</div>
-        <div class="meal-slot-macros">${m.protein}g protein · ${m.cals || 0} kcal${m.carbs>0?' · C:'+m.carbs+'g · F:'+(m.fat||0)+'g':''}</div>
+    customLogged.forEach(m=>{
+      const div=document.createElement('div');
+      div.className='meal-slot meal-slot-logged';
+      const inner=document.createElement('div');
+      inner.style.cssText='display:flex;justify-content:space-between;align-items:flex-start';
+      const info=document.createElement('div');
+      info.style.flex='1';
+      info.innerHTML=`
+        <div class="meal-slot-time">${m.time||'Custom'} · ✓ logged</div>
+        <div class="meal-slot-name">${m.emoji||'🍽️'} ${m.name}</div>
+        <div class="meal-slot-macros">${m.protein}g protein · ${m.cals||0} kcal${m.carbs>0?' · C:'+m.carbs+'g · F:'+(m.fat||0)+'g':''}</div>
       `;
-
-      const removeBtn = document.createElement('button');
-      removeBtn.textContent = '×';
-      removeBtn.style.cssText = 'background:none;border:1.5px solid #C0392B30;border-radius:8px;color:#C0392B;font-size:18px;cursor:pointer;padding:2px 8px;line-height:1;flex-shrink:0;margin-left:10px;font-family:inherit';
-      removeBtn.title = 'Remove this meal';
-      removeBtn.addEventListener('click', async (e) => {
-        e.stopPropagation();
-        await removeSlotMeal(m.id, true);
-      });
-
+      const removeBtn=document.createElement('button');
+      removeBtn.textContent='×';
+      removeBtn.style.cssText='background:none;border:1.5px solid #C0392B30;border-radius:8px;color:#C0392B;font-size:18px;cursor:pointer;padding:2px 8px;line-height:1;flex-shrink:0;margin-left:10px;font-family:inherit';
+      removeBtn.addEventListener('click', async (e)=>{ e.stopPropagation(); await removeSlotMeal(m.id, true); });
       inner.appendChild(info);
       inner.appendChild(removeBtn);
       div.appendChild(inner);
@@ -1080,6 +1158,31 @@ async function initMealPlan(){
     });
   }
 }
+
+// Log a meal from the day plan
+async function quickLogDayMeal(meal, idx, dow){
+  const logMeal = {
+    name: meal.name, protein: meal.protein, carbs: meal.carbs, fat: meal.fat,
+    cals: meal.cals, emoji: '🍽️', time: meal.time,
+    slotIndex: idx, slotDay: dow, id: Date.now()
+  };
+  mlData.meals = [...(mlData.meals||[]), logMeal];
+  mlData.date = currentDate;
+  await fbSave('meals', currentDate, mlData);
+  showSaved('mp-saved');
+  await initMealPlan();
+}
+window.quickLogDayMeal = quickLogDayMeal;
+
+// Remove a logged day-plan meal
+async function removeDayMeal(idx, dow){
+  mlData.meals = (mlData.meals||[]).filter(m => !(m.slotIndex===idx && m.slotDay===dow));
+  mlData.date = currentDate;
+  await fbSave('meals', currentDate, mlData);
+  showSaved('mp-saved');
+  await initMealPlan();
+}
+window.removeDayMeal = removeDayMeal;
 
 async function removeSlotMeal(idOrSlot, isId=false){
   if(isId){
@@ -2253,188 +2356,89 @@ function setPADays(n) {
   document.querySelectorAll('#pa-day-selector .tag').forEach((b,i) => {
     b.className = 'tag ' + (vals[i] === n ? 'tag-active' : 'tag-inactive');
   });
-  // Reset training selections for new day range
-  paTrainingSelections = {};
   renderPlanAhead();
 }
 window.setPADays = setPADays;
 
 async function renderPlanAhead() {
   const container = document.getElementById('pa-content');
-  // Show loading spinner
-  container.innerHTML = '<div style="text-align:center;padding:30px;color:var(--muted)"><div class="spinner" style="margin:0 auto 12px"></div><div style="font-size:13px">Building meal plan...</div></div>';
-
-  // Small delay to let spinner render before heavy work
+  container.innerHTML = '<div style="text-align:center;padding:30px;color:var(--muted)"><div class="spinner" style="margin:0 auto 12px"></div><div style="font-size:13px">Loading...</div></div>';
   await new Promise(r => setTimeout(r, 50));
   container.innerHTML = '';
+
+  if(paDays === 0) return;
+
+  const allIngredients = {};
 
   for(let i = 1; i <= paDays; i++) {
     const d = new Date();
     d.setDate(d.getDate() + i);
-    const ds = d.toISOString().split('T')[0];
-    const dayName = d.toLocaleDateString('en-US', {weekday:'long', month:'short', day:'numeric'});
+    const dow = d.getDay();
+    const dayPlan = WEEKLY_PLAN[dow];
+    const dayLabel = d.toLocaleDateString('en-US', {weekday:'long', month:'short', day:'numeric'});
 
-    // Check if we have a saved checkin for this date
-    const saved = await fbLoad('checkin', ds);
-    const selectedType = paTrainingSelections[ds] || (saved ? saved.type : null);
-
-    // Day card
     const dayCard = document.createElement('div');
     dayCard.style.marginBottom = '16px';
 
-    // Day header
+    // Header with diet style
     const header = document.createElement('div');
     header.style.cssText = 'background:var(--navy);border-radius:12px 12px 0 0;padding:12px 16px;display:flex;justify-content:space-between;align-items:center';
     header.innerHTML = `
       <div>
-        <div style="font-size:15px;font-weight:700;color:#fff">${dayName}</div>
-        <div style="font-size:12px;color:rgba(255,255,255,.65);margin-top:2px">${i === 1 ? 'Tomorrow' : `In ${i} days`}</div>
+        <div style="font-size:15px;font-weight:700;color:#fff">${dayLabel}</div>
+        <div style="font-size:12px;color:rgba(255,255,255,.65);margin-top:2px">${i === 1 ? 'Tomorrow' : 'In ' + i + ' days'}</div>
       </div>
-      ${selectedType ? `<span style="background:rgba(255,255,255,.15);color:#fff;padding:3px 10px;border-radius:20px;font-size:12px;font-weight:600">${TRAINING_TYPES.find(t=>t.id===selectedType)?.emoji} ${TRAINING_TYPES.find(t=>t.id===selectedType)?.label}</span>` : '<span style="color:rgba(255,255,255,.5);font-size:12px">Select training type</span>'}
+      <span style="background:${dayPlan.dietBg};color:${dayPlan.dietColor};padding:4px 12px;border-radius:20px;font-size:12px;font-weight:700">${dayPlan.diet}</span>
     `;
     dayCard.appendChild(header);
 
-    // Training type selector
-    const typeSelector = document.createElement('div');
-    typeSelector.style.cssText = 'background:#F8F8F8;padding:10px 12px;border-left:1px solid var(--border);border-right:1px solid var(--border);display:flex;gap:5px;flex-wrap:wrap';
-    TRAINING_TYPES.forEach(tt => {
-      const btn = document.createElement('button');
-      btn.style.cssText = `padding:5px 10px;border-radius:20px;border:1.5px solid ${selectedType===tt.id?'var(--navy)':'var(--border)'};background:${selectedType===tt.id?'var(--navy)':'#fff'};color:${selectedType===tt.id?'#fff':'var(--muted)'};font-size:11px;font-weight:600;cursor:pointer;font-family:inherit;transition:all .15s`;
-      btn.textContent = tt.emoji + ' ' + tt.label.split(' ')[0] + (tt.label.split(' ')[1] ? ' ' + tt.label.split(' ')[1] : '');
-      btn.onclick = () => {
-        paTrainingSelections[ds] = tt.id;
-        renderPlanAhead();
-      };
-      typeSelector.appendChild(btn);
-    });
-    dayCard.appendChild(typeSelector);
+    // Meals list
+    const mealList = document.createElement('div');
+    mealList.style.cssText = 'border:1px solid var(--border);border-top:none;border-radius:0 0 12px 12px;overflow:hidden';
 
-    // Meal plan for this day
-    if(selectedType) {
-      const tt = TRAINING_TYPES.find(t => t.id === selectedType);
-      const slots = SLOT_TEMPLATES[tt.slots] || [];
-
-      const mealList = document.createElement('div');
-      mealList.style.cssText = 'border:1px solid var(--border);border-top:none;border-radius:0 0 12px 12px;overflow:hidden';
-
-      // Calorie target bar
-      const calBar = document.createElement('div');
-      calBar.style.cssText = 'background:var(--lg);padding:8px 14px;display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid var(--border)';
-      calBar.innerHTML = `
-        <span style="font-size:12px;color:var(--muted)">Target: <strong style="color:var(--navy)">${tt.kcal} kcal</strong></span>
-        <span style="font-size:12px;color:var(--teal);font-weight:600">110g protein</span>
+    let dayCals=0, dayProt=0, dayCarbs=0, dayFat=0;
+    dayPlan.meals.forEach((meal, si) => {
+      dayCals+=meal.cals; dayProt+=meal.protein; dayCarbs+=meal.carbs; dayFat+=meal.fat;
+      const row = document.createElement('div');
+      row.style.cssText = `padding:10px 14px;border-bottom:${si < dayPlan.meals.length-1 ? '1px solid var(--border)' : 'none'};background:${si%2===0?'#fff':'var(--lg)'}`;
+      row.innerHTML = `
+        <div style="font-size:11px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.04em;margin-bottom:3px">${meal.time}</div>
+        <div style="font-size:14px;font-weight:600;color:var(--text)">${meal.name}</div>
+        <div style="font-size:12px;color:var(--muted);margin-top:2px">${meal.protein}g protein · ${meal.cals} kcal · C:${meal.carbs}g · F:${meal.fat}g</div>
       `;
-      mealList.appendChild(calBar);
+      mealList.appendChild(row);
 
-      slots.forEach((slot, si) => {
-        const row = document.createElement('div');
-        row.style.cssText = `padding:10px 14px;border-bottom:${si < slots.length-1 ? '1px solid var(--border)' : 'none'};background:${si%2===0?'#fff':'var(--lg)'}`;
-        row.innerHTML = `
-          <div style="font-size:11px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.04em;margin-bottom:3px">${slot.time}</div>
-          <div style="font-size:14px;font-weight:600;color:var(--text)">${slot.meals[0]}</div>
-          <div style="font-size:12px;color:var(--muted);margin-top:2px">~${slot.protein}g protein · ~${slot.cals} kcal</div>
-          ${slot.meals.length > 1 ? `<div style="margin-top:6px;display:flex;flex-wrap:wrap;gap:4px">${slot.meals.slice(1).map(m=>`<span style="background:var(--border);padding:2px 7px;border-radius:5px;font-size:11px;color:var(--muted)">or: ${m}</span>`).join('')}</div>` : ''}
-        `;
-        mealList.appendChild(row);
+      // Gather ingredients
+      const ings = MEAL_INGREDIENTS[meal.name] || [];
+      ings.forEach(ing => {
+        const key = ing.replace(/\s*\([^)]*\)/g, '').trim();
+        allIngredients[key] = allIngredients[key] || ing;
       });
+    });
 
-      // Prep tips
-      const prepDiv = document.createElement('div');
-      prepDiv.style.cssText = 'padding:10px 14px;background:#FFFBF5;border-top:1px solid var(--border);border-radius:0 0 12px 12px';
-      const prepTips = getPrepTips(tt.slots, ds);
-      prepDiv.innerHTML = `<div style="font-size:11px;font-weight:700;color:var(--orange);text-transform:uppercase;letter-spacing:.04em;margin-bottom:4px">Prep tonight</div><div style="font-size:12px;color:var(--muted);line-height:1.6">${prepTips}</div>`;
-      mealList.appendChild(prepDiv);
+    // Day totals
+    const totals = document.createElement('div');
+    totals.style.cssText = 'padding:10px 14px;background:var(--cream);border-top:1px solid var(--border)';
+    totals.innerHTML = `<div style="font-size:12px;color:var(--muted)">Day total: <strong style="color:var(--navy)">${dayCals} kcal</strong> · ${dayProt}g protein · ${dayCarbs}g carbs · ${dayFat}g fat</div>`;
+    mealList.appendChild(totals);
 
-      dayCard.appendChild(mealList);
-    } else {
-      const empty = document.createElement('div');
-      empty.style.cssText = 'border:1px solid var(--border);border-top:none;border-radius:0 0 12px 12px;padding:14px;text-align:center;color:var(--muted);font-size:13px';
-      empty.textContent = 'Select a training type above to see the meal plan';
-      dayCard.appendChild(empty);
-    }
-
+    dayCard.appendChild(mealList);
     container.appendChild(dayCard);
   }
 
-  // Build ingredient summary at the bottom
-  if(paDays > 0) {
-    const allIngredients = {};
-    for(let i = 1; i <= paDays; i++) {
-      const d = new Date();
-      d.setDate(d.getDate() + i);
-      const ds = d.toISOString().split('T')[0];
-      const selectedType = paTrainingSelections[ds] || null;
-      if(!selectedType) continue;
-      const tt = TRAINING_TYPES.find(t => t.id === selectedType);
-      const slots = SLOT_TEMPLATES[tt.slots] || [];
-      slots.forEach(slot => {
-        const mealName = slot.meals[0];
-        const ings = MEAL_INGREDIENTS[mealName] || [];
-        ings.forEach(ing => {
-          // Normalize ingredient name (remove quantity in brackets)
-          const key = ing.replace(/\s*\([^)]*\)/g, '').trim();
-          allIngredients[key] = (allIngredients[key] || []);
-          allIngredients[key].push(ing);
-        });
-      });
-    }
-
-    if(Object.keys(allIngredients).length > 0) {
-      const summaryDiv = document.createElement('div');
-      summaryDiv.className = 'card';
-      summaryDiv.style.marginTop = '8px';
-
-      let html = `<div style="font-size:13px;font-weight:700;color:var(--navy);margin-bottom:12px;display:flex;align-items:center;gap:8px">
-        🛒 Ingredients Summary
-        <span style="font-size:11px;color:var(--muted);font-weight:400">for ${paDays} day${paDays>1?'s':''} ahead</span>
-      </div>`;
-
-      // Group by category
-      const categories = {
-        'Proteins 🥩🥚': ['Eggs','Smoked salmon','Rotisserie chicken','Canned tuna','Firm tofu','Tempeh','Pea protein powder','Protein powder','Canned chickpeas','Canned black beans','Red lentils','Canned lentil','Protein cottage cheese'],
-        'Dairy & Alternatives 🥛': ['Greek yogurt','Oat milk','Feta cheese','Honey'],
-        'Produce 🥦': ['Banana','Avocado','Baby spinach','Cherry tomatoes','Cucumber','Broccoli','Sweet potato','Mixed berries','Apple','Peach','Lemon','Lime','Garlic','Shredded carrots'],
-        'Grains & Bread 🍞': ['Sourdough bread','Pre-cooked quinoa','Pre-cooked brown rice','Rolled oats','Whole wheat wrap','Naan bread'],
-        'Pantry 🫙': ['Almond butter','Tahini','Olive oil','Soy sauce','Sesame oil','Sesame dressing','Nutritional yeast','Chia seeds','Granola','Walnuts','Almonds','Cinnamon'],
-        'Canned & Jarred 🥫': ['Jarred tikka masala','Jarred salsa','Kalamata olives','Capers','Canned crushed tomatoes','Light coconut milk'],
-        'Frozen ❄️': ['Frozen edamame','Frozen corn','Protein ice cream','Medjool dates','Dried apricots'],
-        'Spices 🌿': ['Ground cumin','Ground turmeric','Garam masala','Butter'],
-      };
-
-      const assigned = new Set();
-      Object.entries(categories).forEach(([cat, keywords]) => {
-        const catItems = Object.keys(allIngredients).filter(ing =>
-          keywords.some(kw => ing.toLowerCase().includes(kw.toLowerCase()))
-        );
-        if(catItems.length === 0) return;
-        catItems.forEach(i => assigned.add(i));
-
-        html += `<div style="margin-bottom:10px">
-          <div style="font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;margin-bottom:6px">${cat}</div>
-          <div style="display:flex;flex-wrap:wrap;gap:5px">`;
-        catItems.forEach(ing => {
-          // Get most detailed version of the ingredient
-          const detail = allIngredients[ing][0];
-          html += `<span style="background:var(--lg);padding:4px 10px;border-radius:8px;font-size:13px;color:var(--text)">☐ ${detail}</span>`;
-        });
-        html += `</div></div>`;
-      });
-
-      // Uncategorized
-      const uncategorized = Object.keys(allIngredients).filter(i => !assigned.has(i));
-      if(uncategorized.length > 0) {
-        html += `<div style="margin-bottom:10px">
-          <div style="font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;margin-bottom:6px">Other</div>
-          <div style="display:flex;flex-wrap:wrap;gap:5px">`;
-        uncategorized.forEach(ing => {
-          html += `<span style="background:var(--lg);padding:4px 10px;border-radius:8px;font-size:13px;color:var(--text)">☐ ${allIngredients[ing][0]}</span>`;
-        });
-        html += `</div></div>`;
-      }
-
-      summaryDiv.innerHTML = html;
-      container.appendChild(summaryDiv);
-    }
+  // Ingredient summary
+  if(Object.keys(allIngredients).length > 0){
+    const summaryDiv = document.createElement('div');
+    summaryDiv.className = 'card';
+    summaryDiv.style.marginTop = '8px';
+    let html = `<div style="font-size:13px;font-weight:700;color:var(--navy);margin-bottom:12px">🛒 Ingredients for ${paDays} day${paDays>1?'s':''}</div>
+      <div style="display:flex;flex-wrap:wrap;gap:5px">`;
+    Object.values(allIngredients).forEach(ing => {
+      html += `<span style="background:var(--lg);padding:4px 10px;border-radius:8px;font-size:13px;color:var(--text)">☐ ${ing}</span>`;
+    });
+    html += `</div>`;
+    summaryDiv.innerHTML = html;
+    container.appendChild(summaryDiv);
   }
 }
 
