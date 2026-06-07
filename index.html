@@ -2152,12 +2152,12 @@ function buildMacroChart(macro, periods, mode){
     const dayNote = mode==='week' ? p.days+'d' : '';
     html += `
       <div style="flex:1;display:flex;flex-direction:column;align-items:center">
-        <div style="font-size:11px;font-weight:700;color:${macro.color};margin-bottom:2px">${intakeVal}</div>
+        <div style="font-size:14px;font-weight:800;color:${macro.color};margin-bottom:3px">${intakeVal}</div>
         <div style="width:100%;flex:1;position:relative;background:var(--lg);border-radius:4px">
           <div style="position:absolute;left:50%;transform:translateX(-50%);bottom:0;width:60%;height:${intakeH}%;background:${barColor};border-radius:4px 4px 0 0"></div>
           <div style="position:absolute;left:0;right:0;bottom:${targetH}%;border-top:2px dashed ${macro.color};opacity:.6" title="target ${targetVal}"></div>
         </div>
-        <div style="font-size:10px;color:var(--muted);margin-top:4px;text-align:center;line-height:1.2">${periodLabel}${dayNote?'<br>'+dayNote:''}</div>
+        <div style="font-size:12px;font-weight:700;color:var(--text);margin-top:5px;text-align:center;line-height:1.25">${periodLabel}${dayNote?'<br>'+dayNote:''}</div>
       </div>`;
   });
   html += '</div>';
