@@ -565,12 +565,24 @@ h3{font-size:14px;font-weight:700;color:var(--navy);margin-bottom:8px}
     <button class="back-btn" onclick="goto('home')">←</button>
     <div><h2>History</h2></div>
   </div>
+  <button class="btn btn-ghost btn-sm" style="width:100%;margin-bottom:12px" onclick="goto('trends')">📊 View Nutrition Trends</button>
   <div class="pill-tabs">
     <button class="pill-tab active" onclick="showHistTab('workouts')">Workouts</button>
     <button class="pill-tab" onclick="showHistTab('nutrition')">Nutrition</button>
   </div>
   <div id="hist-workouts"></div>
   <div id="hist-nutrition" style="display:none"></div>
+</div>
+
+<!-- TRENDS -->
+<div id="screen-trends" class="screen">
+  <div class="page-header">
+    <button class="back-btn" onclick="goto('history')">←</button>
+    <div><h2>Nutrition Trends</h2><div class="subtitle">Weekly averages vs your targets</div></div>
+  </div>
+  <div id="trends-content">
+    <div style="text-align:center;padding:30px;color:var(--muted)"><div class="spinner" style="margin:0 auto 12px"></div><div style="font-size:13px">Calculating averages...</div></div>
+  </div>
 </div>
 
 <script>
@@ -889,6 +901,7 @@ async function goto(screen){
   if(screen==='planahead')  await initPlanAhead();
   if(screen==='activity')    await initActivity();
   if(screen==='managemeals') await initManageMeals();
+  if(screen==='trends')      await initTrends();
   window.scrollTo(0,0);
 }
 
@@ -1978,6 +1991,185 @@ async function removeCustomMeal(name){
   renderManageMeals();
 }
 window.confirmRemoveCustomMeal = confirmRemoveCustomMeal;
+
+
+// ── NUTRITION TRENDS ──────────────────────────────────────────
+// Monday-Sunday weeks. Each day uses its actual training target (or day default
+// if no checkin) and actual logged intake. Averages labeled with day count.
+function mondayOf(dateStr){
+  const d = new Date(dateStr + 'T12:00:00');
+  const day = d.getDay(); // 0=Sun..6=Sat
+  const diff = (day === 0 ? 6 : day - 1); // days since Monday
+  d.setDate(d.getDate() - diff);
+  return d.toISOString().split('T')[0];
+}
+
+function dayTargets(dateStr, checkinByDate){
+  // Returns {cal,prot,carb,fat} target for a date using checkin or day default
+  const dow = new Date(dateStr + 'T12:00:00').getDay();
+  const dayPlan = WEEKLY_PLAN[dow];
+  const checkin = checkinByDate[dateStr];
+  const trainingId = checkin ? checkin.type : (dayPlan ? dayPlan.defaultTraining : null);
+  const tt = TRAINING_TYPES.find(t=>t.id===trainingId);
+  return {
+    cal:  tt ? tt.kcal : 2000,
+    prot: 110,
+    carb: tt && tt.carbs ? tt.carbs : 210,
+    fat:  tt && tt.fat ? tt.fat : 60
+  };
+}
+
+async function initTrends(){
+  const container = document.getElementById('trends-content');
+  container.innerHTML = '<div style="text-align:center;padding:30px;color:var(--muted)"><div class="spinner" style="margin:0 auto 12px"></div><div style="font-size:13px">Calculating averages...</div></div>';
+  await new Promise(r=>setTimeout(r,50));
+
+  const [meals, checkins] = await Promise.all([fbLoadAll('meals'), fbLoadAll('checkin')]);
+  const checkinByDate = {};
+  checkins.forEach(c => { checkinByDate[c.id] = c; });
+
+  // Build per-day intake from logged meals (only days with meals count toward intake)
+  const dayIntake = {};
+  meals.forEach(doc => {
+    const ms = doc.meals || [];
+    if(!ms.length) return;
+    dayIntake[doc.id] = {
+      cal:  ms.reduce((s,m)=>s+(m.cals||0),0),
+      prot: ms.reduce((s,m)=>s+(m.protein||0),0),
+      carb: ms.reduce((s,m)=>s+(m.carbs||0),0),
+      fat:  ms.reduce((s,m)=>s+(m.fat||0),0),
+    };
+  });
+
+  const loggedDates = Object.keys(dayIntake).sort();
+  if(loggedDates.length === 0){
+    container.innerHTML = '<div style="text-align:center;padding:40px 20px;color:var(--muted)">No logged meals yet.<br><span style="font-size:12px">Trends will appear as you log days.</span></div>';
+    return;
+  }
+
+  // Group days into Monday-Sunday weeks
+  const weekMap = {};
+  loggedDates.forEach(ds => {
+    const wk = mondayOf(ds);
+    if(!weekMap[wk]) weekMap[wk] = [];
+    weekMap[wk].push(ds);
+  });
+
+  // Compute each week's average intake and average target
+  const weekKeys = Object.keys(weekMap).sort(); // ascending Monday dates
+  const weeks = weekKeys.map(wk => {
+    const days = weekMap[wk];
+    const n = days.length;
+    let iCal=0,iProt=0,iCarb=0,iFat=0, tCal=0,tProt=0,tCarb=0,tFat=0;
+    days.forEach(ds => {
+      const intake = dayIntake[ds];
+      const tgt = dayTargets(ds, checkinByDate);
+      iCal+=intake.cal; iProt+=intake.prot; iCarb+=intake.carb; iFat+=intake.fat;
+      tCal+=tgt.cal; tProt+=tgt.prot; tCarb+=tgt.carb; tFat+=tgt.fat;
+    });
+    return {
+      week: wk, days: n,
+      intake: { cal:Math.round(iCal/n), prot:Math.round(iProt/n), carb:Math.round(iCarb/n), fat:Math.round(iFat/n) },
+      target: { cal:Math.round(tCal/n), prot:Math.round(tProt/n), carb:Math.round(tCarb/n), fat:Math.round(tFat/n) },
+    };
+  });
+
+  // Recent four weeks (most recent last → show most recent four)
+  const recentWeeks = weeks.slice(-4);
+
+  // Build 4-week blocks (each block = average across up to 4 weeks)
+  const blocks = [];
+  for(let i = weeks.length; i > 0; i -= 4){
+    const chunk = weeks.slice(Math.max(0,i-4), i);
+    if(!chunk.length) continue;
+    const avg = (sel,key) => Math.round(chunk.reduce((s,w)=>s+w[sel][key],0)/chunk.length);
+    blocks.unshift({
+      label: chunk.length===1 ? '1 wk' : chunk.length+' wks',
+      weeks: chunk.length,
+      intake: { cal:avg('intake','cal'), prot:avg('intake','prot'), carb:avg('intake','carb'), fat:avg('intake','fat') },
+      target: { cal:avg('target','cal'), prot:avg('target','prot'), carb:avg('target','carb'), fat:avg('target','fat') },
+    });
+  }
+  const recentBlocks = blocks.slice(-4);
+
+  // Render
+  container.innerHTML = '';
+  const macros = [
+    {key:'cal',  label:'Calories', unit:'kcal', color:'#002664'},
+    {key:'prot', label:'Protein',  unit:'g',    color:'#0F6E56'},
+    {key:'carb', label:'Carbs',    unit:'g',    color:'#FF6E00'},
+    {key:'fat',  label:'Fat',      unit:'g',    color:'#BA7517'},
+  ];
+
+  // Recent weekly averages section
+  const recentSection = document.createElement('div');
+  recentSection.innerHTML = '<div style="font-size:13px;font-weight:700;color:var(--navy);margin-bottom:4px">Recent Weeks</div><div style="font-size:12px;color:var(--muted);margin-bottom:12px">Last '+recentWeeks.length+' week'+(recentWeeks.length!==1?'s':'')+' · Monday-Sunday averages</div>';
+  container.appendChild(recentSection);
+  macros.forEach(m => container.appendChild(buildMacroChart(m, recentWeeks, 'week')));
+
+  // Long-term blocks section
+  if(blocks.length > 0){
+    const blockSection = document.createElement('div');
+    blockSection.style.marginTop = '24px';
+    blockSection.innerHTML = '<div style="font-size:13px;font-weight:700;color:var(--navy);margin-bottom:4px">Long-Term Trend</div><div style="font-size:12px;color:var(--muted);margin-bottom:12px">4-week blocks · big-picture direction</div>';
+    container.appendChild(blockSection);
+    macros.forEach(m => container.appendChild(buildMacroChart(m, recentBlocks, 'block')));
+  }
+}
+window.initTrends = initTrends;
+
+function buildMacroChart(macro, periods, mode){
+  const card = document.createElement('div');
+  card.className = 'card';
+  card.style.marginBottom = '12px';
+
+  let html = `<div style="font-size:13px;font-weight:700;color:${macro.color};margin-bottom:10px">${macro.label}</div>`;
+
+  if(!periods.length){
+    html += '<div style="font-size:12px;color:var(--muted);text-align:center;padding:12px">No data yet</div>';
+    card.innerHTML = html;
+    return card;
+  }
+
+  // Determine max for scaling (highest of intake or target across periods)
+  let maxVal = 0;
+  periods.forEach(p => { maxVal = Math.max(maxVal, p.intake[macro.key], p.target[macro.key]); });
+  maxVal = maxVal * 1.15 || 1;
+
+  // Each column: a fixed-height plot area with the bar growing from the bottom
+  // and a dashed target line positioned by its own height. Clean and reliable.
+  html += '<div style="display:flex;gap:8px;height:130px">';
+  periods.forEach((p,i) => {
+    const intakeVal = p.intake[macro.key];
+    const targetVal = p.target[macro.key];
+    const intakeH = Math.max(Math.round((intakeVal/maxVal)*100), 2);
+    const targetH = Math.round((targetVal/maxVal)*100);
+    const hit = intakeVal >= targetVal*0.95 && intakeVal <= targetVal*1.10;
+    const barColor = hit ? macro.color : (intakeVal < targetVal*0.95 ? macro.color+'99' : '#C0392B');
+    const periodLabel = mode==='week'
+      ? new Date(p.week+'T12:00:00').toLocaleDateString('en-US',{month:'numeric',day:'numeric'})
+      : p.label;
+    const dayNote = mode==='week' ? p.days+'d' : '';
+    html += `
+      <div style="flex:1;display:flex;flex-direction:column;align-items:center">
+        <div style="font-size:11px;font-weight:700;color:${macro.color};margin-bottom:2px">${intakeVal}</div>
+        <div style="width:100%;flex:1;position:relative;background:var(--lg);border-radius:4px">
+          <div style="position:absolute;left:50%;transform:translateX(-50%);bottom:0;width:60%;height:${intakeH}%;background:${barColor};border-radius:4px 4px 0 0"></div>
+          <div style="position:absolute;left:0;right:0;bottom:${targetH}%;border-top:2px dashed ${macro.color};opacity:.6" title="target ${targetVal}"></div>
+        </div>
+        <div style="font-size:10px;color:var(--muted);margin-top:4px;text-align:center;line-height:1.2">${periodLabel}${dayNote?'<br>'+dayNote:''}</div>
+      </div>`;
+  });
+  html += '</div>';
+  // Legend
+  const lastTarget = periods[periods.length-1].target[macro.key];
+  html += `<div style="font-size:11px;color:var(--muted);margin-top:8px;display:flex;align-items:center;gap:6px"><span style="display:inline-block;width:16px;border-top:2px dashed ${macro.color};opacity:.5"></span> target line (most recent ~${lastTarget}${macro.unit})</div>`;
+
+  card.innerHTML = html;
+  return card;
+}
+window.buildMacroChart = buildMacroChart;
+
 
 // ── BOOT ──────────────────────────────────────────────────────
 window.addEventListener('load',async()=>{
