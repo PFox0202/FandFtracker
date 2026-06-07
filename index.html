@@ -862,7 +862,16 @@ async function fbSave(col,id,data){
   }catch(e){console.warn(e)}
 }
 async function fbLoad(col,id){try{const s=await db.collection(col).doc(id).get();return s.exists?s.data():null}catch(e){return null}}
-async function fbLoadAll(col){try{const s=await db.collection(col).orderBy(firebase.firestore.FieldPath.documentId(),'desc').get();const d=[];s.forEach(x=>d.push({id:x.id,...x.data()}));return d}catch(e){return[]}}
+async function fbLoadAll(col){
+  try{
+    const s=await db.collection(col).get();
+    const d=[];
+    s.forEach(x=>d.push({id:x.id,...x.data()}));
+    // Sort by document id (dates) descending in JS — avoids fragile orderBy
+    d.sort((a,b)=> (a.id<b.id?1:a.id>b.id?-1:0));
+    return d;
+  }catch(e){ console.warn('fbLoadAll error',e); return []; }
+}
 
 // ── NAVIGATION ────────────────────────────────────────────────
 async function goto(screen){
