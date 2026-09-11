@@ -56,7 +56,7 @@ h3{font-size:14px;font-weight:700;color:var(--navy);margin-bottom:8px}
 .date-strip::-webkit-scrollbar{display:none}
 .date-btn{min-width:46px;padding:8px 6px;border-radius:12px;border:none;cursor:pointer;flex-shrink:0;transition:all .15s;font-family:inherit}
 .action-card{padding:16px 20px;border-radius:14px;border:none;cursor:pointer;display:flex;align-items:center;gap:14px;text-align:left;width:100%;margin-bottom:10px;font-family:inherit}
-.preset-grid{display:grid;grid-template-columns:1fr 1fr;gap:5px;margin-bottom:10px}
+#dayTypeTags { display: none !important; }
 .preset-btn{padding:8px 10px;border-radius:8px;border:1px solid var(--border);background:#FAFAF8;color:var(--text);cursor:pointer;font-size:12px;font-weight:500;text-align:left;display:flex;gap:6px;align-items:center;font-family:inherit}
 .alt-row{padding:6px 10px;border-radius:8px;background:var(--lg);margin-top:4px;font-size:12px;color:var(--muted);display:flex;justify-content:space-between;align-items:center}
 .pill-tabs{display:flex;background:var(--lg);border-radius:12px;padding:3px;margin-bottom:16px}
@@ -110,6 +110,10 @@ h3{font-size:14px;font-weight:700;color:var(--navy);margin-bottom:8px}
 .macro-chip-label{font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.04em}
 /* Section label */
 .section-label{font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;margin:16px 0 8px}
+
+/* Hide old Quick Pick system */
+
+.alt-row { display: none !important; }
 </style>
 </head>
 <body>
@@ -121,14 +125,27 @@ h3{font-size:14px;font-weight:700;color:var(--navy);margin-bottom:8px}
   <div style="font-size:13px;color:var(--muted);margin-top:12px">Connecting...</div>
 </div>
 
+<!-- LOGIN SCREEN -->
+<div id="screen-login" class="screen" style="display:flex;flex-direction:column;justify-content:center;align-items:center;min-height:100vh;gap:20px;padding:40px 20px;max-width:none">
+  <div style="font-size:28px;font-weight:800;color:var(--navy);text-align:center">F&F Tracker</div>
+  <div style="font-size:14px;color:var(--muted);text-align:center">Who's working out?</div>
+  <div style="display:flex;flex-direction:column;gap:10px;width:100%;max-width:300px;margin-top:20px">
+    <button onclick="selectUser('Polina')" style="padding:16px;border-radius:10px;border:2px solid var(--navy);background:var(--navy);color:#fff;font-size:16px;font-weight:700;cursor:pointer;font-family:inherit">Polina</button>
+    <button onclick="selectUser('Husband')" style="padding:16px;border-radius:10px;border:2px solid var(--orange);background:var(--orange);color:#fff;font-size:16px;font-weight:700;cursor:pointer;font-family:inherit">Husband</button>
+  </div>
+</div>
+
 <!-- HOME -->
 <div id="screen-home" class="screen">
-  <div style="margin-bottom:20px;display:flex;align-items:center;gap:14px">
-    <img src="logo.png" style="width:60px;height:60px;object-fit:contain;border-radius:50%;flex-shrink:0"/>
-    <div>
-      <div style="font-size:26px;font-weight:800;color:var(--navy);letter-spacing:-.02em">Polina's Tracker</div>
-      <div class="subtitle" id="home-subtitle">Power Phase · Body Recomposition</div>
+  <div style="margin-bottom:20px;display:flex;align-items:center;justify-content:space-between;gap:14px">
+    <div style="display:flex;align-items:center;gap:14px">
+      <img src="logo.png" style="width:60px;height:60px;object-fit:contain;border-radius:50%;flex-shrink:0"/>
+      <div>
+        <div style="font-size:26px;font-weight:800;color:var(--navy);letter-spacing:-.02em" id="header-user">Polina's Tracker</div>
+        <div class="subtitle" id="home-subtitle">Power Phase · Body Recomposition</div>
+      </div>
     </div>
+    <button onclick="switchUser()" style="padding:8px 12px;background:var(--border);border:none;border-radius:6px;color:var(--muted);font-size:12px;font-weight:600;cursor:pointer;font-family:inherit;white-space:nowrap">Switch User</button>
   </div>
   <div class="date-strip" id="dateStrip"></div>
 
@@ -403,15 +420,20 @@ h3{font-size:14px;font-weight:700;color:var(--navy);margin-bottom:8px}
     <div style="font-size:13px;font-weight:700;color:var(--orange);margin-bottom:12px;text-transform:uppercase;letter-spacing:.05em">Add Set</div>
     <div style="display:flex;gap:8px;align-items:center;margin-bottom:8px">
       <input class="input" id="wo-ex" placeholder="Exercise name" style="flex:1"/>
-      <button class="qp-btn" id="qpBtn" onclick="toggleQP()" style="background:#FAFAF8;color:var(--muted)">Quick pick</button>
+
     </div>
-    <div id="qpPanel" style="display:none;margin-bottom:10px">
-      <div id="qpList" class="preset-grid"></div>
-      <div id="altPanel" style="display:none">
-        <div style="font-size:11px;font-weight:600;color:var(--muted);margin:6px 0 4px;text-transform:uppercase;letter-spacing:.05em">No equipment? Try instead:</div>
-        <div id="altList"></div>
-      </div>
+        <div style="margin-bottom:10px;display:flex;gap:4px;flex-wrap:wrap">
+      <input type="text" id="ex-search" placeholder="Search exercises..." style="width:100%;margin-bottom:8px;padding:8px;border:1px solid var(--border);border-radius:6px;font-size:12px;">
+      <button data-muscle="Shoulders" onclick="showMuscleGroupExercises('Shoulders')" style="padding:6px 10px;border-radius:6px;border:1px solid var(--border);font-size:11px;cursor:pointer;background:#fff">Shoulders</button>
+      <button data-muscle="Chest" onclick="showMuscleGroupExercises('Chest')" style="padding:6px 10px;border-radius:6px;border:1px solid var(--border);font-size:11px;cursor:pointer;background:#fff">Chest</button>
+      <button data-muscle="Back" onclick="showMuscleGroupExercises('Back')" style="padding:6px 10px;border-radius:6px;border:1px solid var(--border);font-size:11px;cursor:pointer;background:#fff">Back</button>
+      <button data-muscle="Biceps" onclick="showMuscleGroupExercises('Biceps')" style="padding:6px 10px;border-radius:6px;border:1px solid var(--border);font-size:11px;cursor:pointer;background:#fff">Biceps</button>
+      <button data-muscle="Triceps" onclick="showMuscleGroupExercises('Triceps')" style="padding:6px 10px;border-radius:6px;border:1px solid var(--border);font-size:11px;cursor:pointer;background:#fff">Triceps</button>
+      <button data-muscle="Legs" onclick="showMuscleGroupExercises('Legs')" style="padding:6px 10px;border-radius:6px;border:1px solid var(--border);font-size:11px;cursor:pointer;background:#fff">Legs</button>
+    
     </div>
+    <div id="ex-list-container" style="margin-bottom:10px;max-height:200px;overflow-y:auto;border-radius:8px;border:1px solid var(--border);padding:8px;background:var(--lg)"></div>
+
     <div class="grid2" style="margin-bottom:8px">
       <div><div class="label">Weight (lbs/kg)</div><input class="input" id="wo-weight" placeholder="e.g. 65 lbs"/></div>
       <div><div class="label">Reps</div><input class="input" id="wo-reps" placeholder="5"/></div>
@@ -787,6 +809,305 @@ const ALTS={
   "Hamstring Curl":["Swiss Ball Hamstring Curl","Nordic Curl","Single-Leg RDL"]
 };
 
+// EXERCISE DATABASE - organized by muscle groups
+const EXERCISE_DB = {
+  Shoulders: [
+    {name:"Barbell Shoulder Press", primary:"Anterior Deltoid", secondary:"Triceps, Upper Chest"},
+    {name:"Dumbbell Shoulder Press", primary:"Anterior Deltoid", secondary:"Triceps, Upper Chest"},
+    {name:"Machine Shoulder Press", primary:"Anterior Deltoid", secondary:"Triceps"},
+    {name:"Pike Push-Up", primary:"Anterior Deltoid", secondary:"Triceps, Upper Chest"},
+    {name:"Dumbbell Front Raise", primary:"Anterior Deltoid", secondary:"Upper Chest"},
+    {name:"Cable Front Raise", primary:"Anterior Deltoid", secondary:"Upper Chest"},
+    {name:"Plate Front Raise", primary:"Anterior Deltoid", secondary:""},
+    {name:"Barbell Front Raise", primary:"Anterior Deltoid", secondary:""},
+    {name:"Lateral Raise", primary:"Lateral Deltoid", secondary:""},
+    {name:"Dumbbell Lateral Raise", primary:"Lateral Deltoid", secondary:""},
+    {name:"Cable Lateral Raise", primary:"Lateral Deltoid", secondary:""},
+    {name:"Machine Lateral Raise", primary:"Lateral Deltoid", secondary:""},
+    {name:"Lever Lateral Raise", primary:"Lateral Deltoid", secondary:""},
+    {name:"Band Lateral Raise", primary:"Lateral Deltoid", secondary:""},
+    {name:"Upright Row", primary:"Lateral Deltoid", secondary:"Biceps, Trapezius"},
+    {name:"Dumbbell Upright Row", primary:"Lateral Deltoid", secondary:"Biceps, Trapezius"},
+    {name:"Barbell Upright Row", primary:"Lateral Deltoid", secondary:"Biceps, Trapezius"},
+    {name:"Reverse Pec Deck", primary:"Posterior Deltoid", secondary:"Upper Back, Rhomboid"},
+    {name:"Face Pull", primary:"Posterior Deltoid", secondary:"Upper Back, Rhomboid"},
+    {name:"Band Pull-Apart", primary:"Posterior Deltoid", secondary:"Rhomboid"},
+    {name:"Cable Reverse Flye", primary:"Posterior Deltoid", secondary:"Upper Back"},
+    {name:"Dumbbell Reverse Flye", primary:"Posterior Deltoid", secondary:"Upper Back"},
+    {name:"Machine Reverse Flye", primary:"Posterior Deltoid", secondary:"Upper Back"},
+    {name:"Bent-Over Dumbbell Raise", primary:"Posterior Deltoid", secondary:"Upper Back"},
+    {name:"Rear Delt Fly", primary:"Posterior Deltoid", secondary:"Upper Back"},
+  ],
+  Chest: [
+    {name:"Incline Barbell Bench Press", primary:"Upper Chest", secondary:"Anterior Deltoid, Triceps"},
+    {name:"Incline Dumbbell Bench Press", primary:"Upper Chest", secondary:"Anterior Deltoid, Triceps"},
+    {name:"Incline Smith Machine Press", primary:"Upper Chest", secondary:"Anterior Deltoid, Triceps"},
+    {name:"Incline Push-Up", primary:"Upper Chest", secondary:"Anterior Deltoid"},
+    {name:"Incline Dumbbell Flye", primary:"Upper Chest", secondary:"Anterior Deltoid"},
+    {name:"Machine Incline Press", primary:"Upper Chest", secondary:"Anterior Deltoid, Triceps"},
+    {name:"Barbell Bench Press", primary:"Mid Chest", secondary:"Triceps, Anterior Deltoid"},
+    {name:"Dumbbell Bench Press", primary:"Mid Chest", secondary:"Triceps, Anterior Deltoid"},
+    {name:"Machine Chest Press", primary:"Mid Chest", secondary:"Triceps"},
+    {name:"Smith Machine Bench Press", primary:"Mid Chest", secondary:"Triceps, Anterior Deltoid"},
+    {name:"Push-Up", primary:"Mid Chest", secondary:"Triceps, Anterior Deltoid"},
+    {name:"Dumbbell Flye", primary:"Mid Chest", secondary:""},
+    {name:"Cable Flye", primary:"Mid Chest", secondary:""},
+    {name:"Pec Deck", primary:"Mid Chest", secondary:""},
+    {name:"Decline Barbell Bench Press", primary:"Lower Chest", secondary:"Triceps"},
+    {name:"Decline Dumbbell Bench Press", primary:"Lower Chest", secondary:"Triceps"},
+    {name:"Decline Push-Up", primary:"Lower Chest", secondary:"Triceps"},
+    {name:"Decline Dumbbell Flye", primary:"Lower Chest", secondary:""},
+    {name:"Chest Dip", primary:"Lower Chest", secondary:"Triceps"},
+    {name:"Machine Decline Press", primary:"Lower Chest", secondary:"Triceps"},
+    {name:"Low to High Cable Flye", primary:"Lower Chest", secondary:""},
+  ],
+  Back: [
+    {name:"Pull-Up", primary:"Latissimus Dorsi (Outer)", secondary:"Biceps"},
+    {name:"Chin-Up", primary:"Latissimus Dorsi (Outer)", secondary:"Biceps"},
+    {name:"Weighted Pull-Up", primary:"Latissimus Dorsi (Outer)", secondary:"Biceps"},
+    {name:"Assisted Pull-Up", primary:"Latissimus Dorsi (Outer)", secondary:"Biceps"},
+    {name:"Wide-Grip Lat Pulldown", primary:"Latissimus Dorsi (Outer)", secondary:"Biceps"},
+    {name:"Wide-Grip Pull-Up", primary:"Latissimus Dorsi (Outer)", secondary:"Biceps"},
+    {name:"Lat Pulldown", primary:"Latissimus Dorsi (Inner)", secondary:"Biceps"},
+    {name:"Close-Grip Lat Pulldown", primary:"Latissimus Dorsi (Inner)", secondary:"Biceps"},
+    {name:"V-Bar Lat Pulldown", primary:"Latissimus Dorsi (Inner)", secondary:"Biceps"},
+    {name:"Single-Arm Lat Pulldown", primary:"Latissimus Dorsi (Inner)", secondary:"Biceps"},
+    {name:"Underhand Lat Pulldown", primary:"Latissimus Dorsi (Inner)", secondary:"Biceps"},
+    {name:"Machine Lat Pulldown", primary:"Latissimus Dorsi (Inner)", secondary:"Biceps"},
+    {name:"Barbell Row", primary:"Latissimus Dorsi, Mid Back", secondary:"Biceps, Rhomboid"},
+    {name:"Dumbbell Row", primary:"Latissimus Dorsi, Mid Back", secondary:"Biceps"},
+    {name:"Single-Arm Dumbbell Row", primary:"Latissimus Dorsi, Mid Back", secondary:"Biceps"},
+    {name:"Seal Row", primary:"Latissimus Dorsi, Mid Back", secondary:"Biceps"},
+    {name:"Machine Row", primary:"Latissimus Dorsi, Mid Back", secondary:"Biceps"},
+    {name:"Pendulum Row", primary:"Latissimus Dorsi, Mid Back", secondary:"Biceps"},
+    {name:"T-Bar Row", primary:"Latissimus Dorsi, Mid Back", secondary:"Biceps"},
+    {name:"Chest-Supported Row", primary:"Latissimus Dorsi, Mid Back", secondary:"Biceps"},
+    {name:"Face Pull", primary:"Rhomboid, Posterior Deltoid", secondary:"Upper Back"},
+    {name:"Band Pull-Apart", primary:"Rhomboid, Trapezius", secondary:""},
+    {name:"Barbell Shrug", primary:"Trapezius (Upper)", secondary:""},
+    {name:"Dumbbell Shrug", primary:"Trapezius (Upper)", secondary:""},
+    {name:"Machine Shrug", primary:"Trapezius (Upper)", secondary:""},
+  ],
+  Biceps: [
+    {name:"Barbell Curl", primary:"Biceps Brachii (Long Head)", secondary:"Brachialis"},
+    {name:"Dumbbell Curl", primary:"Biceps Brachii (Long Head)", secondary:"Brachialis"},
+    {name:"Incline Dumbbell Curl", primary:"Biceps Brachii (Long Head)", secondary:""},
+    {name:"Preacher Curl", primary:"Biceps Brachii (Long Head)", secondary:"Brachialis"},
+    {name:"Machine Curl", primary:"Biceps Brachii (Long Head)", secondary:"Brachialis"},
+    {name:"Cable Curl", primary:"Biceps Brachii (Long Head)", secondary:"Brachialis"},
+    {name:"Close-Grip Barbell Curl", primary:"Biceps Brachii (Short Head)", secondary:"Brachialis"},
+    {name:"Hammer Curl", primary:"Biceps Brachii (Short Head)", secondary:"Brachialis, Brachioradialis"},
+    {name:"Dumbbell Hammer Curl", primary:"Biceps Brachii (Short Head)", secondary:"Brachioradialis"},
+    {name:"Cable Hammer Curl", primary:"Biceps Brachii (Short Head)", secondary:"Brachioradialis"},
+    {name:"Concentration Curl", primary:"Biceps Brachii (Short Head)", secondary:""},
+    {name:"Close-Grip Pull-Up", primary:"Brachialis", secondary:"Biceps Brachii"},
+    {name:"Reverse Curl", primary:"Brachialis, Brachioradialis", secondary:""},
+    {name:"Machine Preacher Curl", primary:"Brachialis", secondary:"Biceps Brachii"},
+    {name:"Barbell Reverse Curl", primary:"Brachioradialis", secondary:"Biceps Brachii"},
+    {name:"Dumbbell Reverse Curl", primary:"Brachioradialis", secondary:"Biceps Brachii"},
+    {name:"Cable Reverse Curl", primary:"Brachioradialis", secondary:"Biceps Brachii"},
+    {name:"Wrist Curl", primary:"Brachioradialis, Forearm Flexors", secondary:""},
+  ],
+  Triceps: [
+    {name:"Close-Grip Bench Press", primary:"Triceps Brachii (Long Head)", secondary:"Chest, Anterior Deltoid"},
+    {name:"Overhead Triceps Extension", primary:"Triceps Brachii (Long Head)", secondary:""},
+    {name:"Dumbbell Overhead Extension", primary:"Triceps Brachii (Long Head)", secondary:""},
+    {name:"Skull Crusher", primary:"Triceps Brachii (Long Head)", secondary:""},
+    {name:"EZ-Bar Skull Crusher", primary:"Triceps Brachii (Long Head)", secondary:""},
+    {name:"Cable Overhead Extension", primary:"Triceps Brachii (Long Head)", secondary:""},
+    {name:"Triceps Dip", primary:"Triceps Brachii (Lateral Head)", secondary:"Chest, Anterior Deltoid"},
+    {name:"Rope Triceps Pushdown", primary:"Triceps Brachii (Lateral Head)", secondary:""},
+    {name:"V-Bar Triceps Pushdown", primary:"Triceps Brachii (Lateral Head)", secondary:""},
+    {name:"Machine Triceps Extension", primary:"Triceps Brachii (Lateral Head)", secondary:""},
+    {name:"Triceps Pressdown", primary:"Triceps Brachii (Lateral Head)", secondary:""},
+    {name:"Bench Press", primary:"Triceps Brachii (Medial Head)", secondary:"Chest, Anterior Deltoid"},
+    {name:"Kickback", primary:"Triceps Brachii (Medial Head)", secondary:""},
+    {name:"Dumbbell Kickback", primary:"Triceps Brachii (Medial Head)", secondary:""},
+    {name:"Cable Kickback", primary:"Triceps Brachii (Medial Head)", secondary:""},
+  ],
+  Legs: [
+    {name:"Barbell Back Squat", primary:"Quadriceps, Glutes", secondary:"Hamstrings, Lower Back"},
+    {name:"Goblet Squat", primary:"Quadriceps, Glutes", secondary:"Hamstrings"},
+    {name:"Smith Machine Squat", primary:"Quadriceps, Glutes", secondary:"Hamstrings"},
+    {name:"Leg Press", primary:"Quadriceps, Glutes", secondary:"Hamstrings"},
+    {name:"Machine Leg Press", primary:"Quadriceps, Glutes", secondary:"Hamstrings"},
+    {name:"Hack Squat", primary:"Quadriceps", secondary:"Glutes, Hamstrings"},
+    {name:"Leg Extension", primary:"Quadriceps (Vastus Lateralis)", secondary:""},
+    {name:"Front Squat", primary:"Quadriceps (Vastus Medialis)", secondary:"Glutes, Core"},
+    {name:"Bulgarian Split Squat", primary:"Quadriceps (Vastus Medialis)", secondary:"Glutes, Hamstrings"},
+    {name:"Close-Stance Leg Press", primary:"Quadriceps (Vastus Medialis)", secondary:""},
+    {name:"Barbell Deadlift", primary:"Hamstrings, Glutes, Lower Back", secondary:"Traps, Forearms"},
+    {name:"Romanian Deadlift", primary:"Hamstrings, Lower Back", secondary:"Glutes"},
+    {name:"Lying Leg Curl", primary:"Hamstrings", secondary:""},
+    {name:"Seated Leg Curl", primary:"Hamstrings", secondary:""},
+    {name:"Standing Leg Curl", primary:"Hamstrings", secondary:""},
+    {name:"Machine Leg Curl", primary:"Hamstrings", secondary:""},
+    {name:"Barbell RDL", primary:"Hamstrings, Lower Back", secondary:"Glutes"},
+    {name:"Barbell Hip Thrust", primary:"Glutes", secondary:"Hamstrings, Quadriceps"},
+    {name:"Dumbbell Hip Thrust", primary:"Glutes", secondary:"Hamstrings"},
+    {name:"Machine Hip Thrust", primary:"Glutes", secondary:"Hamstrings"},
+    {name:"Cable Pull-Through", primary:"Glutes, Hamstrings", secondary:"Lower Back"},
+    {name:"Step-Up", primary:"Glutes, Quadriceps", secondary:"Hamstrings"},
+    {name:"Dumbbell Step-Up", primary:"Glutes, Quadriceps", secondary:"Hamstrings"},
+    {name:"Machine Glute Kickback", primary:"Glutes", secondary:"Hamstrings"},
+    {name:"Standing Calf Raise", primary:"Gastrocnemius", secondary:"Soleus"},
+    {name:"Seated Calf Raise", primary:"Soleus", secondary:""},
+    {name:"Machine Calf Raise", primary:"Gastrocnemius", secondary:"Soleus"},
+    {name:"Dumbbell Calf Raise", primary:"Gastrocnemius", secondary:"Soleus"},
+    {name:"Barbell Calf Raise", primary:"Gastrocnemius", secondary:"Soleus"},
+    {name:"Leg Press Calf Raise", primary:"Gastrocnemius, Soleus", secondary:""},
+  ]
+};
+
+function getExerciseInfo(name) {
+  for (let group in EXERCISE_DB) {
+    const found = EXERCISE_DB[group].find(e => e.name.toLowerCase() === name.toLowerCase());
+    if (found) return found;
+  }
+  return null;
+}
+
+// Get last workout data for an exercise (from previous days)
+async function getLastExerciseData(exerciseName) {
+  // Search back up to 30 days to find when this exercise was last done
+  for (let daysBack = 1; daysBack <= 30; daysBack++) {
+    const pastDate = new Date(currentDate);
+    pastDate.setDate(pastDate.getDate() - daysBack);
+    const dateStr = pastDate.toISOString().split('T')[0];
+    
+    try {
+      const pastData = await fbLoad('workouts', dateStr);
+      if (pastData && pastData.sets) {
+        const lastSet = pastData.sets.find(s => s.exercise === exerciseName);
+        if (lastSet) {
+          return lastSet; // Found it, return the data
+        }
+      }
+    } catch (e) {
+      // Continue searching if this date has no data
+      continue;
+    }
+  }
+  return null; // Not found in last 30 days
+}
+
+function showMuscleGroupExercises(group) {
+  currentMuscleGroup = group;  // UPDATE the current muscle group!
+  console.log('SHOW:', group, 'Custom:', customExercises[group]);
+  const container = document.getElementById('ex-list-container');
+  let exercises = EXERCISE_DB[group] || [];
+  
+  console.log('Before custom add:', exercises.length, 'exercises');
+  console.log('customExercises:', customExercises);
+  console.log('customExercises[' + group + ']:', customExercises[group]);
+  
+  // ADD CUSTOM EXERCISES
+  if (customExercises && customExercises[group] && Array.isArray(customExercises[group])) {
+    console.log('Adding custom exercises:', customExercises[group]);
+    const customForGroup = customExercises[group].map(name => ({name, primary: group, secondary: ''}));
+    exercises = customForGroup.concat(exercises);
+    console.log('Total after custom:', exercises.length);
+  }
+  
+  console.log('Creating buttons for', exercises.length, 'exercises');
+  container.innerHTML = '';
+  if (exercises.length === 0) {
+    container.innerHTML = '<div style="padding:10px;color:var(--muted);font-size:12px">No exercises found</div>';
+    return;
+  }
+  
+  exercises.forEach((ex, idx) => {
+    const isCustom = idx < (customExercises[group] ? customExercises[group].length : 0);
+    
+    const wrapper = document.createElement('div');
+    wrapper.style.cssText = 'display:flex;gap:8px;margin-bottom:6px;align-items:flex-start';
+    
+    const btnContainer = document.createElement('div');
+    btnContainer.style.cssText = 'flex:1;display:flex;flex-direction:column;gap:2px';
+    
+    const btn = document.createElement('button');
+    btn.className = 'preset-btn';
+    btn.style.cssText = 'text-align:left;background:#fff;border:1px solid var(--border);padding:8px;border-radius:6px;cursor:pointer;font-family:inherit;font-size:13px;width:100%';
+    btn.textContent = ex.name;
+    btn.onclick = () => document.getElementById('wo-ex').value = ex.name;
+    btnContainer.appendChild(btn);
+    
+    // Show muscle targets for database exercises only
+    if (!isCustom && (ex.primary || ex.secondary)) {
+      const targets = document.createElement('div');
+      targets.style.cssText = 'font-size:11px;color:var(--muted);padding:0 8px;line-height:1.3';
+      const targetText = ex.secondary ? ex.primary + ', ' + ex.secondary : ex.primary;
+      targets.textContent = '→ ' + targetText;
+      btnContainer.appendChild(targets);
+    }
+    
+    // Add placeholder for historical data
+    const historyDiv = document.createElement('div');
+    historyDiv.style.cssText = 'font-size:10px;color:#888;padding:0 8px;font-style:italic';
+    historyDiv.textContent = 'Loading...';
+    historyDiv.id = 'history-' + idx;
+    btnContainer.appendChild(historyDiv);
+    
+    // Load historical data asynchronously
+    getLastExerciseData(ex.name).then(lastSet => {
+      if (lastSet) {
+        const dateStr = new Date(lastSet.id).toLocaleDateString('en-US', {month: 'short', day: 'numeric'});
+        historyDiv.textContent = `Last: ${lastSet.weight||'BW'} × ${lastSet.reps||'?'} (${dateStr})`;
+        historyDiv.style.color = '#666';
+      } else {
+        historyDiv.textContent = 'No history';
+        historyDiv.style.color = '#aaa';
+      }
+    }).catch(err => {
+      historyDiv.textContent = 'No history';
+      historyDiv.style.color = '#aaa';
+    });
+    
+    wrapper.appendChild(btnContainer);
+    
+    // Add delete button for custom exercises only
+    if (isCustom) {
+      const deleteBtn = document.createElement('button');
+      deleteBtn.textContent = '✕';
+      deleteBtn.style.cssText = 'width:32px;height:32px;padding:0;background:#ff6b6b;color:#fff;border:none;border-radius:4px;cursor:pointer;font-size:18px;font-weight:bold';
+      deleteBtn.onclick = async (e) => {
+        e.stopPropagation();
+        if (confirm('Delete "' + ex.name + '"?')) {
+          customExercises[group] = customExercises[group].filter(name => name !== ex.name);
+          await fbSave('custom', 'exercises', customExercises);
+          showMuscleGroupExercises(group);
+        }
+      };
+      wrapper.appendChild(deleteBtn);
+    }
+    
+    container.appendChild(wrapper);
+  });
+  
+  // Highlight the active muscle group button
+  document.querySelectorAll('[data-muscle]').forEach(btn => {
+    if (btn.dataset.muscle === group) {
+      btn.style.background = 'var(--navy)';
+      btn.style.color = '#fff';
+    } else {
+      btn.style.background = '#fff';
+      btn.style.color = 'var(--text)';
+    }
+  });
+  
+  // Setup search filtering for this group's exercises
+  const searchBox = document.getElementById('ex-search');
+  searchBox.oninput = (e) => {
+    const searchTerm = e.target.value.toLowerCase();
+    const exerciseWrappers = document.querySelectorAll('#ex-list-container > div');
+    exerciseWrappers.forEach(wrapper => {
+      const name = wrapper.textContent.toLowerCase();
+      wrapper.style.display = name.includes(searchTerm) ? '' : 'none';
+    });
+  };
+}
+
+
 const MEALS=[
   {name:"Protein shake",protein:25,carbs:8,fat:3,cals:223,emoji:"🥤"},
   {name:"Pea protein shake",protein:25,carbs:6,fat:3,cals:218,emoji:"🥤"},
@@ -833,11 +1154,13 @@ const MEALS=[
 ];
 
 // ── STATE ─────────────────────────────────────────────────────
+let currentUser=null;  // Currently logged in user
 let currentDate=todayStr();
 let woData={sets:[],dayType:"Squat + Pull"};
 let mlData={meals:[]};
 let checkinData=null;
-let customExercises=[];
+let customExercises={};
+let currentMuscleGroup='Chest'; // Default to Chest
 let customMeals=[];
 let showQP=false,showMP=false;
 let timerTotal=90,timerRemain=90,timerRunning=false,timerInterval=null;
@@ -869,17 +1192,18 @@ function todayStr(){return new Date().toISOString().split('T')[0]}
 // ── FIREBASE ──────────────────────────────────────────────────
 async function fbSave(col,id,data){
   try{
-    await db.collection(col).doc(id).set(data);
-    cacheSet(col+':'+id, data); // update cache immediately on save
+    if(!currentUser) {console.warn('No user logged in'); return;}
+    await db.collection('users').doc(currentUser).collection(col).doc(id).set(data);
+    cacheSet(col+':'+id, data);
   }catch(e){console.warn(e)}
 }
-async function fbLoad(col,id){try{const s=await db.collection(col).doc(id).get();return s.exists?s.data():null}catch(e){return null}}
+async function fbLoad(col,id){try{if(!currentUser)return null;const s=await db.collection('users').doc(currentUser).collection(col).doc(id).get();return s.exists?s.data():null}catch(e){return null}}
 async function fbLoadAll(col){
   try{
-    const s=await db.collection(col).get();
+    if(!currentUser)return [];
+    const s=await db.collection('users').doc(currentUser).collection(col).get();
     const d=[];
     s.forEach(x=>d.push({id:x.id,...x.data()}));
-    // Sort by document id (dates) descending in JS — avoids fragile orderBy
     d.sort((a,b)=> (a.id<b.id?1:a.id>b.id?-1:0));
     return d;
   }catch(e){ console.warn('fbLoadAll error',e); return []; }
@@ -939,7 +1263,7 @@ async function loadDayData(){
   woData=w||{sets:[],dayType:"Squat + Pull"};
   mlData=m||{meals:[]};
   checkinData=c||null;
-  customExercises=(ce&&ce.list)||[];
+  customExercises=(ce&&ce.list)||{};
   customMeals=(cm&&cm.list)||[];
 }
 function renderHomeSummary(){
@@ -1234,10 +1558,38 @@ async function quickLogSlot(slot){
 }
 
 // ── WORKOUT ───────────────────────────────────────────────────
+// ── USER SELECTION ────────────────────────────────────────────
+function selectUser(userName){
+  currentUser = userName;
+  localStorage.setItem('f-and-f-user', userName);
+  document.getElementById('screen-login').style.display = 'none';
+  document.getElementById('screen-home').classList.add('active');
+  initHome();
+  document.getElementById('header-user').textContent = userName + '\'s Tracker';
+}
+
+function switchUser(){
+  currentUser = null;
+  cacheInvalidateAll();
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.getElementById('screen-login').style.display = 'flex';
+}
+
+function checkUserSession(){
+  const savedUser = localStorage.getItem('f-and-f-user');
+  if(savedUser){
+    selectUser(savedUser);
+  }
+}
+
 async function initWorkout(){
   document.getElementById('wo-date').textContent=fmtDate(currentDate);
-  const data=await fbLoad('workouts',currentDate);
+  const [data, ce] = await Promise.all([
+    fbLoad('workouts',currentDate),
+    fbLoad('custom','exercises')
+  ]);
   woData=data||{sets:[],dayType:"Squat + Pull"};
+  customExercises=(ce&&ce.list)||{};
   renderDayTags();renderSetList();
   document.getElementById('wo-ex').value='';
   document.getElementById('wo-weight').value='';
@@ -1267,7 +1619,12 @@ function renderQPList(){
   const list=document.getElementById('qpList');list.innerHTML='';
   const exs=EXERCISES[woData.dayType]||[];
   const extra=Object.keys(ALTS).filter(k=>!exs.includes(k));
-  const myEx=customExercises.filter(e=>![...exs,...extra].includes(e));
+  // Extract all custom exercises from all groups
+  let allMyEx = [];
+  Object.keys(customExercises || {}).forEach(group => {
+    allMyEx = allMyEx.concat(customExercises[group] || []);
+  });
+  const myEx = allMyEx.filter(e=>![...exs,...extra].includes(e));
 
   if(myEx.length){
     const lbl=document.createElement('div');
@@ -1302,9 +1659,16 @@ function selectAlt(alt){document.getElementById('wo-ex').value=alt;document.getE
 async function addSet(){
   const ex=document.getElementById('wo-ex').value.trim();if(!ex)return;
   // Save custom exercise if checked
-  if(document.getElementById('wo-save-ex').checked&&!customExercises.includes(ex)){
-    customExercises=[ex,...customExercises];
-    await fbSave('custom','exercises',{list:customExercises});
+  if(document.getElementById('wo-save-ex').checked){
+    // Initialize if needed
+    if (!customExercises[currentMuscleGroup]) {
+      customExercises[currentMuscleGroup] = [];
+    }
+    // Add if not already there
+    if (!customExercises[currentMuscleGroup].includes(ex)) {
+      customExercises[currentMuscleGroup].push(ex);
+      await fbSave('custom','exercises',{list:customExercises});
+    }
   }
   const set={exercise:ex,weight:document.getElementById('wo-weight').value.trim(),reps:document.getElementById('wo-reps').value.trim()||'5',notes:document.getElementById('wo-notes').value.trim(),id:Date.now()};
   woData.sets=[set,...(woData.sets||[])];woData.date=currentDate;
@@ -1893,11 +2257,13 @@ function updateActiveExBar() {
   btns.innerHTML = '';
 
   activeExercises.forEach(ex => {
-    // Get last set for this exercise to pre-fill weight/reps
+    // Get last set for this exercise to pre-fill weight/reps (from today)
     const lastSet = sets.find(s => s.exercise === ex);
     const btn = document.createElement('button');
     btn.style.cssText = 'padding:8px 14px;border-radius:20px;border:2px solid var(--orange);background:var(--orange);color:#fff;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;transition:all .15s;white-space:nowrap';
     btn.innerHTML = `${ex.split(' ').slice(0,2).join(' ')} ${lastSet&&lastSet.weight?'· '+lastSet.weight:''}`;
+    // Add last workout label if available
+    btn.title = lastSet && (lastSet.weight || lastSet.reps) ? `Last: ${lastSet.weight||'BW'} × ${lastSet.reps||'?'} reps${lastSet.notes?' · '+lastSet.notes:''}` : 'No previous data';
     btn.onclick = () => {
       // Pre-fill the form with this exercise and last set values
       document.getElementById('wo-ex').value = ex;
@@ -2758,6 +3124,9 @@ async function quickAddMeal() {
   await initMealPlan();
 }
 window.quickAddMeal = quickAddMeal;
+
+// Initialize user session
+checkUserSession();
 
 </script>
 
