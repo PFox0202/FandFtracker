@@ -254,6 +254,16 @@ h3{font-size:14px;font-weight:700;color:var(--navy);margin-bottom:8px}
     <div><div style="font-weight:700;font-size:16px">Log Workout</div><div id="home-wsub" style="font-size:12px;color:rgba(255,255,255,.65);margin-top:1px">Track sets, reps and weights</div></div>
     <div style="margin-left:auto;font-size:18px;opacity:.6">›</div>
   </button>
+  <button class="action-card" style="background:#fff;border:1.5px solid var(--border)" onclick="goto('programs')">
+    <div style="font-size:28px">📋</div>
+    <div><div style="font-weight:700;font-size:16px;color:var(--navy)">Manage Programs</div><div style="font-size:12px;color:var(--muted);margin-top:1px">Edit workout programs</div></div>
+    <div style="margin-left:auto;font-size:18px;color:var(--muted);opacity:.6">›</div>
+  </button>
+  <button class="action-card" style="background:#fff;border:1.5px solid var(--border)" onclick="goto('analytics')">
+    <div style="font-size:28px">📊</div>
+    <div><div style="font-weight:700;font-size:16px;color:var(--navy)">Analytics</div><div style="font-size:12px;color:var(--muted);margin-top:1px">KPIs and progress tracking</div></div>
+    <div style="margin-left:auto;font-size:18px;color:var(--muted);opacity:.6">›</div>
+  </button>
   <button class="action-card" style="background:#fff;border:1.5px solid var(--border)" onclick="goto('meals')">
     <div style="font-size:28px">📝</div>
     <div><div style="font-weight:700;font-size:16px;color:var(--navy)">Log Meals Manually</div><div style="font-size:12px;color:var(--muted);margin-top:1px">Add anything not in the plan</div></div>
@@ -401,6 +411,70 @@ h3{font-size:14px;font-weight:700;color:var(--navy);margin-bottom:8px}
   </div>
 </div>
 
+<!-- MANAGE PROGRAMS -->
+<div id="screen-programs" class="screen">
+  <div class="page-header">
+    <button class="back-btn" onclick="goto('home')">←</button>
+    <div><h2>Manage Programs</h2><div class="subtitle">Edit your workout programs</div></div>
+  </div>
+  
+  <div style="margin-bottom:20px">
+    <div style="font-size:14px;font-weight:600;color:var(--navy);margin-bottom:10px">Active Program</div>
+    <div id="program-selector" style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:16px"></div>
+  </div>
+  
+  <div style="margin-bottom:20px">
+    <div style="font-size:14px;font-weight:600;color:var(--navy);margin-bottom:10px">Program Days</div>
+    <div id="program-days-list" style="border:1px solid var(--border);border-radius:8px;overflow:hidden"></div>
+  </div>
+
+  <button class="btn btn-teal" onclick="showAddDayModal()" style="width:100%;margin-bottom:12px">+ Add New Day</button>
+  <button class="btn btn-navy" onclick="showProgramCreator()" style="width:100%">+ Create New Program</button>
+</div>
+
+<!-- ADD DAY MODAL -->
+<div id="add-day-modal" style="display:none;position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,.5);z-index:1000;align-items:flex-end">
+  <div style="background:#fff;width:100%;border-radius:16px 16px 0 0;padding:20px;max-height:90vh;overflow-y:auto">
+    <div style="font-size:18px;font-weight:700;color:var(--navy);margin-bottom:16px">Add New Workout Day</div>
+    
+    <div style="margin-bottom:12px">
+      <div class="label">Day Name</div>
+      <input type="text" class="input" id="add-day-name" placeholder="e.g. Day 5 Accessory" style="margin-bottom:0"/>
+      <div style="font-size:11px;color:var(--muted);margin-top:4px;font-style:italic">Tip: Use Day# format for consistency</div>
+    </div>
+    
+    <div style="margin-bottom:12px">
+      <div class="label">Primary Focus</div>
+      <div style="display:flex;gap:6px;flex-wrap:wrap">
+        <button data-focus="Upper" onclick="selectDayFocus(this)" style="padding:8px 14px;border-radius:6px;border:2px solid var(--border);background:#fff;cursor:pointer;font-weight:600;font-size:12px">Upper</button>
+        <button data-focus="Lower" onclick="selectDayFocus(this)" style="padding:8px 14px;border-radius:6px;border:2px solid var(--border);background:#fff;cursor:pointer;font-weight:600;font-size:12px">Lower</button>
+        <button data-focus="Full Body" onclick="selectDayFocus(this)" style="padding:8px 14px;border-radius:6px;border:2px solid var(--border);background:#fff;cursor:pointer;font-weight:600;font-size:12px">Full Body</button>
+        <button data-focus="Accessory" onclick="selectDayFocus(this)" style="padding:8px 14px;border-radius:6px;border:2px solid var(--border);background:#fff;cursor:pointer;font-weight:600;font-size:12px">Accessory</button>
+      </div>
+      <input type="hidden" id="add-day-focus"/>
+    </div>
+    
+    <div style="margin-bottom:12px">
+      <div class="label">Select Muscle Groups</div>
+      <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:8px">
+        <button class="muscle-filter-btn" data-muscle="Shoulders" onclick="toggleDayMuscle('Shoulders')" style="padding:8px 14px;border-radius:8px;border:2px solid var(--border);background:#fff;color:var(--navy);cursor:pointer;font-weight:600;font-size:12px">Shoulders</button>
+        <button class="muscle-filter-btn" data-muscle="Chest" onclick="toggleDayMuscle('Chest')" style="padding:8px 14px;border-radius:8px;border:2px solid var(--border);background:#fff;color:var(--navy);cursor:pointer;font-weight:600;font-size:12px">Chest</button>
+        <button class="muscle-filter-btn" data-muscle="Back" onclick="toggleDayMuscle('Back')" style="padding:8px 14px;border-radius:8px;border:2px solid var(--border);background:#fff;color:var(--navy);cursor:pointer;font-weight:600;font-size:12px">Back</button>
+        <button class="muscle-filter-btn" data-muscle="Biceps" onclick="toggleDayMuscle('Biceps')" style="padding:8px 14px;border-radius:8px;border:2px solid var(--border);background:#fff;color:var(--navy);cursor:pointer;font-weight:600;font-size:12px">Biceps</button>
+        <button class="muscle-filter-btn" data-muscle="Triceps" onclick="toggleDayMuscle('Triceps')" style="padding:8px 14px;border-radius:8px;border:2px solid var(--border);background:#fff;color:var(--navy);cursor:pointer;font-weight:600;font-size:12px">Triceps</button>
+        <button class="muscle-filter-btn" data-muscle="Legs" onclick="toggleDayMuscle('Legs')" style="padding:8px 14px;border-radius:8px;border:2px solid var(--border);background:#fff;color:var(--navy);cursor:pointer;font-weight:600;font-size:12px">Legs</button>
+        <button class="muscle-filter-btn" data-muscle="Core" onclick="toggleDayMuscle('Core')" style="padding:8px 14px;border-radius:8px;border:2px solid var(--border);background:#fff;color:var(--navy);cursor:pointer;font-weight:600;font-size:12px">Core</button>
+      </div>
+      <div id="add-day-selected-muscles" style="font-size:12px;color:var(--muted);font-style:italic">No muscles selected</div>
+    </div>
+    
+    <div style="display:flex;gap:8px">
+      <button class="btn btn-teal" onclick="saveNewDay()" style="flex:1">Save Day</button>
+      <button class="btn btn-ghost" onclick="closeAddDayModal()" style="flex:1">Cancel</button>
+    </div>
+  </div>
+</div>
+
 <!-- WORKOUT -->
 <div id="screen-workout" class="screen">
   <div class="page-header">
@@ -408,6 +482,23 @@ h3{font-size:14px;font-weight:700;color:var(--navy);margin-bottom:8px}
     <div><h2>Workout Log</h2><div class="subtitle" id="wo-date"></div></div>
     <span class="saved-toast" id="wo-saved"></span>
   </div>
+  
+  <!-- Week/Phase Display -->
+  <div id="wo-week-display" style="padding:12px;background:var(--cream);border-radius:8px;border-left:4px solid var(--teal);margin-bottom:16px;display:none">
+    <div style="font-size:11px;font-weight:700;text-transform:uppercase;color:var(--muted);letter-spacing:.05em">Current Program</div>
+    <div style="font-size:16px;font-weight:700;color:var(--navy);margin-top:4px" id="wo-program-name"></div>
+    <div style="font-size:13px;color:var(--teal);font-weight:600;margin-top:6px" id="wo-week-phase"></div>
+  </div>
+  
+  <!-- Program Day Selection -->
+  <div style="margin-bottom:16px">
+    <div style="font-size:12px;font-weight:600;color:var(--muted);margin-bottom:6px;text-transform:uppercase;letter-spacing:.04em">Program Day</div>
+    <select id="wo-program-day" class="input" onchange="updateExercisesByProgramDay()" style="margin-bottom:8px">
+      <option value="">Select a program day...</option>
+    </select>
+    <div id="wo-program-muscles" style="padding:12px;background:#fff;border-radius:8px;font-size:13px;color:var(--navy);font-weight:600;margin-top:8px;border:1px solid var(--border)"></div>
+  </div>
+  
   <div class="tag-row" id="dayTypeTags"></div>
 
   <!-- Active exercise quick-tap bar -->
@@ -430,9 +521,9 @@ h3{font-size:14px;font-weight:700;color:var(--navy);margin-bottom:8px}
       <button data-muscle="Biceps" onclick="showMuscleGroupExercises('Biceps')" style="padding:6px 10px;border-radius:6px;border:1px solid var(--border);font-size:11px;cursor:pointer;background:#fff">Biceps</button>
       <button data-muscle="Triceps" onclick="showMuscleGroupExercises('Triceps')" style="padding:6px 10px;border-radius:6px;border:1px solid var(--border);font-size:11px;cursor:pointer;background:#fff">Triceps</button>
       <button data-muscle="Legs" onclick="showMuscleGroupExercises('Legs')" style="padding:6px 10px;border-radius:6px;border:1px solid var(--border);font-size:11px;cursor:pointer;background:#fff">Legs</button>
-    
+      <button data-muscle="Core" onclick="showMuscleGroupExercises('Core')" style="padding:6px 10px;border-radius:6px;border:1px solid var(--border);font-size:11px;cursor:pointer;background:#fff">Core</button>
     </div>
-    <div id="ex-list-container" style="margin-bottom:10px;max-height:200px;overflow-y:auto;border-radius:8px;border:1px solid var(--border);padding:8px;background:var(--lg)"></div>
+    <div id="ex-list-container" style="margin-bottom:10px;max-height:400px;overflow-y:auto;-webkit-overflow-scrolling:touch;border-radius:8px;border:1px solid var(--border);padding:8px;background:var(--lg)"></div>
 
     <div class="grid2" style="margin-bottom:8px">
       <div><div class="label">Weight (lbs/kg)</div><input class="input" id="wo-weight" placeholder="e.g. 65 lbs"/></div>
@@ -956,15 +1047,119 @@ const EXERCISE_DB = {
     {name:"Dumbbell Calf Raise", primary:"Gastrocnemius", secondary:"Soleus"},
     {name:"Barbell Calf Raise", primary:"Gastrocnemius", secondary:"Soleus"},
     {name:"Leg Press Calf Raise", primary:"Gastrocnemius, Soleus", secondary:""},
+  ],
+  Core: [
+    {name:"Ab Wheel", primary:"Rectus Abdominis", secondary:"Core Stabilizers"},
+    {name:"Cable Woodchop", primary:"Obliques", secondary:"Rectus Abdominis"},
+    {name:"Hanging Leg Raise", primary:"Rectus Abdominis", secondary:"Iliopsoas"},
+    {name:"Decline Situp", primary:"Rectus Abdominis", secondary:""},
+    {name:"Barbell Ab Rollout", primary:"Rectus Abdominis", secondary:"Core Stabilizers"},
+    {name:"Machine Ab Crunch", primary:"Rectus Abdominis", secondary:""},
+    {name:"Cable Crunch", primary:"Rectus Abdominis", secondary:""},
+    {name:"Rope Crunch", primary:"Rectus Abdominis", secondary:""},
+    {name:"Weighted Crunch", primary:"Rectus Abdominis", secondary:""},
+    {name:"Pallof Press", primary:"Obliques", secondary:"Core Stabilizers"},
+    {name:"Landmine Rotation", primary:"Obliques", secondary:"Core"},
+    {name:"Russian Twist", primary:"Obliques", secondary:"Rectus Abdominis"},
+    {name:"Weighted Sit-up", primary:"Rectus Abdominis", secondary:"Hip Flexors"},
+    {name:"Dragon Flags", primary:"Rectus Abdominis", secondary:"Core Stabilizers"},
+    {name:"Plank", primary:"Core Stabilizers", secondary:"Rectus Abdominis, Shoulders"},
+    {name:"Weighted Plank", primary:"Core Stabilizers", secondary:"Rectus Abdominis, Shoulders"},
+    {name:"Side Plank", primary:"Obliques", secondary:"Core Stabilizers"},
+    {name:"Dead Bug", primary:"Rectus Abdominis", secondary:"Core Stabilizers"}
   ]
 };
 
-function getExerciseInfo(name) {
-  for (let group in EXERCISE_DB) {
-    const found = EXERCISE_DB[group].find(e => e.name.toLowerCase() === name.toLowerCase());
-    if (found) return found;
+// ── DEFAULT PROGRAMS ──────────────────────────────────────────
+const DEFAULT_PROGRAMS = {
+  "8-Week Upper/Lower": {
+    currentWeek: 1,
+    totalWeeks: 8,
+    phases: [
+      {weeks: [1,2,3], name: "Build", description: "Focus on form and volume"},
+      {weeks: [4,5,6], name: "Intensify", description: "Increase weight, lower reps"},
+      {weeks: [7], name: "Deload", description: "Reduce volume, recover"},
+      {weeks: [8], name: "Test", description: "Test new maxes"}
+    ],
+    days: [
+      {
+        name: "Day 1 Upper",
+        exercises: [
+          {name: "Barbell Bench Press"},
+          {name: "Barbell Bent Over Row"},
+          {name: "Dumbbell Shoulder Press"},
+          {name: "Pull-ups"},
+          {name: "Barbell Curl"},
+          {name: "Rope Tricep Pushdown"}
+        ]
+      },
+      {
+        name: "Day 2 Lower",
+        exercises: [
+          {name: "Barbell Back Squat"},
+          {name: "Romanian Deadlift"},
+          {name: "Machine Leg Press"},
+          {name: "Lying Leg Curl"},
+          {name: "Standing Calf Raise"},
+          {name: "Ab Wheel"}
+        ]
+      },
+      {
+        name: "Day 3 Upper",
+        exercises: [
+          {name: "Incline Dumbbell Bench Press"},
+          {name: "Machine Row"},
+          {name: "Lateral Raise"},
+          {name: "Lat Pulldown"},
+          {name: "Dumbbell Row"},
+          {name: "Tricep Dips"}
+        ]
+      },
+      {
+        name: "Day 4 Lower",
+        exercises: [
+          {name: "Front Squat"},
+          {name: "Hack Squat"},
+          {name: "Leg Extension"},
+          {name: "Nordic Curl"},
+          {name: "Seated Calf Raise"},
+          {name: "Cable Woodchop"}
+        ]
+      }
+    ]
   }
-  return null;
+};
+
+function generatePhaseData(exercise, startWeight) {
+  // Auto-generates phase-specific targets based on starting weight
+  const bodyweightExercises = ["Pull-ups", "Tricep Dips", "Nordic Curl", "Ab Wheel"];
+  const isBodyweight = bodyweightExercises.includes(exercise);
+  
+  return {
+    weeks: [],  // Will be set per phase
+    weight: 0,  // Will be calculated
+    reps: 0,    // Will be set per phase
+    sets: 0,    // Will be set per phase
+    bodyweight: isBodyweight
+  };
+}
+
+function getExerciseTargetForPhase(exercise, startWeight, phaseWeeks) {
+  // Returns target weight, reps, sets for a given phase
+  const bodyweightExercises = ["Pull-ups", "Tricep Dips", "Nordic Curl", "Ab Wheel"];
+  const isBodyweight = bodyweightExercises.includes(exercise);
+  
+  if(phaseWeeks[0] <= 3) { // Weeks 1-3: Build
+    return {weeks: "1-3", name: "Build", weight: startWeight, reps: 8, sets: 3, volume: 1};
+  } else if(phaseWeeks[0] <= 6) { // Weeks 4-6: Intensify
+    const addWeight = startWeight > 50 ? 10 : (startWeight > 20 ? 5 : 2.5);
+    return {weeks: "4-6", name: "Intensify", weight: startWeight + addWeight, reps: 6, sets: 3, volume: 1};
+  } else if(phaseWeeks[0] === 7) { // Week 7: Deload
+    return {weeks: "7", name: "Deload", weight: startWeight, reps: 8, sets: 2, volume: 0.5};
+  } else { // Week 8: Test
+    const testWeight = startWeight > 50 ? startWeight + 15 : (startWeight > 20 ? startWeight + 10 : startWeight + 5);
+    return {weeks: "8", name: "Test", weight: testWeight, reps: 1, sets: 3, volume: 1};
+  }
 }
 
 // Get last workout data for an exercise (from previous days)
@@ -1156,7 +1351,10 @@ const MEALS=[
 // ── STATE ─────────────────────────────────────────────────────
 let currentUser=null;  // Currently logged in user
 let currentDate=todayStr();
-let woData={sets:[],dayType:"Squat + Pull"};
+let currentProgram=null;  // Active program name
+let currentProgramDay=null;  // Selected program day for this workout
+let programs={};  // All programs: {programName: {days: [{name, muscles}, ...]}}
+let woData={sets:[],dayType:"Squat + Pull",program:null,programDay:null};  // Added program tracking
 let mlData={meals:[]};
 let checkinData=null;
 let customExercises={};
@@ -1187,7 +1385,13 @@ function cacheInvalidateAll() {
   Object.keys(cache).forEach(k => delete cache[k]);
 }
 
-function todayStr(){return new Date().toISOString().split('T')[0]}
+function todayStr(){
+  const d = new Date();
+  const year = d.getFullYear();
+  const month = String(d.getMonth() + 1).padStart(2, '0');
+  const day = String(d.getDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
+}
 
 // ── FIREBASE ──────────────────────────────────────────────────
 async function fbSave(col,id,data){
@@ -1216,6 +1420,7 @@ async function goto(screen){
   if(screen==='home')       await initHome();
   if(screen==='checkin')    initCheckin();
   if(screen==='mealplan')   await initMealPlan();
+  if(screen==='programs')   await initPrograms();
   if(screen==='workout')    await initWorkout();
   if(screen==='meals')      await initMeals();
   if(screen==='timer')      initTimer();
@@ -1226,6 +1431,7 @@ async function goto(screen){
   if(screen==='activity')    await initActivity();
   if(screen==='managemeals') await initManageMeals();
   if(screen==='trends')      await initTrends();
+  if(screen==='analytics')   await initAnalytics();
   window.scrollTo(0,0);
 }
 
@@ -1559,13 +1765,22 @@ async function quickLogSlot(slot){
 
 // ── WORKOUT ───────────────────────────────────────────────────
 // ── USER SELECTION ────────────────────────────────────────────
-function selectUser(userName){
+async function selectUser(userName){
   currentUser = userName;
   localStorage.setItem('f-and-f-user', userName);
+  
+  // Show home screen immediately
+  const loading = document.getElementById('loading');
+  if(loading) loading.style.display = 'none';
   document.getElementById('screen-login').style.display = 'none';
   document.getElementById('screen-home').classList.add('active');
-  initHome();
   document.getElementById('header-user').textContent = userName + '\'s Tracker';
+  
+  // Initialize programs (must complete before navigating)
+  await initializePrograms();
+  
+  // Load home data
+  await initHome();
 }
 
 function switchUser(){
@@ -1576,20 +1791,554 @@ function switchUser(){
 }
 
 function checkUserSession(){
+  console.log('checkUserSession called');
   const savedUser = localStorage.getItem('f-and-f-user');
+  console.log('Saved user:', savedUser);
   if(savedUser){
-    selectUser(savedUser);
+    console.log('Auto-logging in as:', savedUser);
+    // Fire async operation in background, don't wait
+    selectUser(savedUser).catch(err => {
+      console.error('Auto-login failed:', err);
+      // Show login screen on error
+      document.getElementById('screen-login').style.display = 'flex';
+    });
+  } else {
+    console.log('No saved user, showing login screen');
+    document.getElementById('screen-login').style.display = 'flex';
   }
+}
+
+// ── PROGRAM MANAGEMENT ────────────────────────────────────────
+async function initializePrograms(){
+  if(!currentUser) return;
+  
+  // Load defaults - don't save yet (will save on edit)
+  if(Object.keys(programs).length === 0) {
+    programs = JSON.parse(JSON.stringify(DEFAULT_PROGRAMS));
+  }
+  
+  // Set first program as active
+  if(Object.keys(programs).length > 0) {
+    currentProgram = Object.keys(programs)[0];
+    localStorage.setItem('f-and-f-program', currentProgram);
+  }
+}
+
+async function savePrograms(){
+  if(!currentUser) return;
+  await fbSave('programs', 'list', {programs});
+}
+
+async function createProgram(name, days){
+  programs[name] = {days};
+  await savePrograms();
+}
+
+async function deleteProgram(name){
+  delete programs[name];
+  if(currentProgram === name){
+    currentProgram = Object.keys(programs)[0];
+    localStorage.setItem('f-and-f-program', currentProgram);
+  }
+  await savePrograms();
+}
+
+function setActiveProgram(name){
+  currentProgram = name;
+  localStorage.setItem('f-and-f-program', currentProgram);
+}
+
+function getProgramDays(){
+  if(!currentProgram || !programs[currentProgram]) return [];
+  return programs[currentProgram].days || [];
+}
+
+function getExercisesForDay(dayName){
+  if(!currentProgram || !programs[currentProgram]) return [];
+  const day = programs[currentProgram].days.find(d => d.name === dayName);
+  if(!day || !day.exercises) return [];
+  
+  // Return the exercises list with their starting weights
+  return day.exercises;
+}
+
+async function initPrograms(){
+  if(!currentProgram || !programs[currentProgram]) currentProgram = Object.keys(programs)[0];
+  renderPrograms();
+}
+
+function renderPrograms(){
+  if(!currentProgram || !programs || Object.keys(programs).length === 0) {
+    document.getElementById('program-days-list').innerHTML = '<div style="padding:20px;text-align:center;color:var(--muted)">Loading programs...</div>';
+    return;
+  }
+  
+  const prog = programs[currentProgram];
+  if(!prog) return;
+  const phaseInfo = getCurrentPhaseInfo(prog, prog.currentWeek);
+  
+  // Render program selector
+  const selector = document.getElementById('program-selector');
+  selector.innerHTML = '';
+  for(let name in programs){
+    const btn = document.createElement('button');
+    btn.style.cssText = `padding:8px 12px;border-radius:6px;border:2px ${currentProgram===name?'solid var(--navy)':'solid var(--border)'};background:${currentProgram===name?'var(--navy)':'#fff'};color:${currentProgram===name?'#fff':'var(--navy)'};cursor:pointer;font-weight:600;font-size:12px;font-family:inherit`;
+    btn.textContent = name;
+    btn.onclick = () => {setActiveProgram(name); renderPrograms();};
+    selector.appendChild(btn);
+  }
+  
+  // Show current week/phase
+  let html = `<div style="padding:12px;background:var(--cream);border-radius:8px;margin-bottom:12px;border-left:4px solid var(--teal)">
+    <div style="font-size:11px;font-weight:700;text-transform:uppercase;color:var(--muted);letter-spacing:.05em">Current Status</div>
+    <div style="font-size:14px;font-weight:700;color:var(--navy);margin-top:6px">Week ${prog.currentWeek} of ${prog.totalWeeks}</div>
+    <div style="font-size:13px;color:var(--teal);font-weight:600;margin-top:4px">${phaseInfo.name}: ${phaseInfo.description}</div>
+  </div>`;
+  
+  // Render program days
+  const days = getProgramDays();
+  html += days.map((day,i) => `
+    <div style="padding:12px;border-bottom:1px solid var(--border);cursor:pointer;display:flex;justify-content:space-between;align-items:flex-start">
+      <div style="flex:1" onclick="showProgramDayExercises('${day.name}')">
+        <div style="font-weight:600;color:var(--navy);font-size:13px">${day.name}</div>
+        <div style="font-size:10px;color:var(--muted);margin-top:4px;line-height:1.5">${day.exercises.map(ex => ex.name).join(' • ')}</div>
+      </div>
+      <div style="display:flex;gap:6px;margin-left:8px">
+        <button onclick="editProgramDay('${currentProgram}', '${day.name}')" style="padding:6px 12px;background:var(--navy);color:#fff;border:none;border-radius:6px;cursor:pointer;font-size:11px;font-weight:600;font-family:inherit;white-space:nowrap">Edit</button>
+        <button onclick="deleteProgramDay('${currentProgram}', '${day.name}')" style="padding:6px 12px;background:#FF6E00;color:#fff;border:none;border-radius:6px;cursor:pointer;font-size:11px;font-weight:600;font-family:inherit;white-space:nowrap">Delete</button>
+      </div>
+    </div>
+  `).join('');
+  
+  const daysList = document.getElementById('program-days-list');
+  daysList.innerHTML = html;
+  
+  // Add Next Week button
+  const nextBtn = document.createElement('button');
+  nextBtn.style.cssText = 'width:100%;padding:12px;margin-top:16px;background:var(--teal);color:#fff;border:none;border-radius:8px;font-weight:600;cursor:pointer;font-family:inherit;font-size:14px';
+  if(prog.currentWeek < prog.totalWeeks) {
+    nextBtn.textContent = `✓ Complete Week ${prog.currentWeek} → Start Week ${prog.currentWeek + 1}`;
+    nextBtn.onclick = async () => {
+      prog.currentWeek++;
+      await savePrograms();
+      renderPrograms();
+    };
+  } else {
+    nextBtn.textContent = '🎉 Program Complete!';
+    nextBtn.disabled = true;
+    nextBtn.style.background = '#ccc';
+  }
+  daysList.appendChild(nextBtn);
+}
+
+function editProgramDay(programName, dayName){
+  const prog = programs[programName];
+  const day = prog.days.find(d => d.name === dayName);
+  if(!day) return;
+  
+  // Build list of all available exercises
+  let allExercises = [];
+  for(let muscle in EXERCISE_DB) {
+    EXERCISE_DB[muscle].forEach(ex => {
+      allExercises.push({name: ex.name, muscle: muscle});
+    });
+  }
+  
+  const currentExerciseNames = day.exercises.map(e => e.name);
+  const availableExercises = allExercises.filter(e => !currentExerciseNames.includes(e.name));
+  
+  
+  
+  const modal = `
+    <div style="position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,.5);display:flex;align-items:flex-end;z-index:1001" onclick="document.getElementById('edit-day-modal').remove()">
+      <div style="background:#fff;width:100%;border-radius:16px 16px 0 0;padding:20px;max-height:90vh;overflow-y:auto" onclick="event.stopPropagation()">
+        
+        <div style="font-size:18px;font-weight:700;color:var(--navy);margin-bottom:16px">${dayName}</div>
+        
+        <!-- Current Exercises -->
+        <div style="margin-bottom:20px">
+          <div style="font-size:12px;font-weight:600;color:var(--muted);text-transform:uppercase;margin-bottom:8px;letter-spacing:.05em">Current Exercises (${day.exercises.length})</div>
+          <div style="display:flex;flex-direction:column;gap:6px">
+            ${day.exercises.map((ex, idx) => `
+              <div style="padding:10px;background:var(--cream);border-radius:6px;display:flex;justify-content:space-between;align-items:center">
+                <div>
+                  <div style="font-weight:600;font-size:13px;color:var(--navy)">${ex.name}</div>
+                </div>
+                <button onclick="removeExerciseFromDay('${programName}', '${dayName}', ${idx})" style="padding:4px 8px;background:#ff6b6b;color:#fff;border:none;border-radius:4px;cursor:pointer;font-size:10px;font-weight:600;font-family:inherit">Remove</button>
+              </div>
+            `).join('')}
+          </div>
+        </div>
+        
+        <!-- Add Exercise Section -->
+        <div style="margin-bottom:20px">
+          <button onclick="openExercisePicker('${programName}', '${dayName}')" style="width:100%;padding:12px;background:var(--teal);color:#fff;border:none;border-radius:6px;cursor:pointer;font-weight:600;font-family:inherit">+ Browse & Add Exercise</button>
+        </div>
+        
+        <button onclick="saveProgramChangesAndClose()" style="width:100%;padding:12px;background:var(--navy);color:#fff;border:none;border-radius:8px;font-weight:600;cursor:pointer;font-family:inherit">Done</button>
+      </div>
+    </div>
+  `;
+  
+  const div = document.createElement('div');
+  div.id = 'edit-day-modal';
+  // Store available exercises on the element so we can access it later
+  div.innerHTML = modal;
+  document.body.appendChild(div);
+
+}
+
+async function addExerciseToDay(programName, dayName){
+  const select = document.getElementById('add-ex-select');
+  
+  if(!select.value) {
+    alert('Please select an exercise');
+    return;
+  }
+  
+  const [exerciseName, muscle] = select.value.split('|');
+  
+  const prog = programs[programName];
+  const day = prog.days.find(d => d.name === dayName);
+  
+  // Just store the exercise name - weight will come from last logged data
+  day.exercises.push({name: exerciseName});
+  
+  // Refresh modal to show new exercise
+  editProgramDay(programName, dayName);
+}
+
+function removeExerciseFromDay(programName, dayName, exerciseIndex){
+  const prog = programs[programName];
+  const day = prog.days.find(d => d.name === dayName);
+  day.exercises.splice(exerciseIndex, 1);
+  
+  // Refresh modal
+  editProgramDay(programName, dayName);
+}
+
+async function saveProgramChangesAndClose(){
+  await savePrograms();
+  const modal = document.getElementById('edit-day-modal');
+  if(modal) modal.remove();
+  renderPrograms();
+}
+
+function openExercisePicker(programName, dayName){
+  const prog = programs[programName];
+  const day = prog.days.find(d => d.name === dayName);
+  if(!day) return;
+  
+  const currentExerciseNames = day.exercises.map(e => e.name);
+  
+  // Store context for filtering
+  window.pickerContext = {programName, dayName, currentExerciseNames};
+  let selectedMuscle = null;
+  
+  let html = `
+    <div style="position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,.5);display:flex;align-items:flex-end;z-index:1002" onclick="document.getElementById('exercise-picker-modal').remove()">
+      <div style="background:#fff;width:100%;border-radius:16px 16px 0 0;padding:20px;max-height:90vh;overflow-y:auto" onclick="event.stopPropagation()">
+        <div style="font-size:18px;font-weight:700;color:var(--navy);margin-bottom:16px">Add Exercise</div>
+        
+        <!-- Muscle Group Buttons -->
+        <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:20px">
+  `;
+  
+  // Get all muscle groups
+  const muscles = Object.keys(EXERCISE_DB).sort();
+  muscles.forEach(muscle => {
+    html += `<button onclick="filterExercisesByMuscle('${muscle}')" class="muscle-filter-btn" data-muscle="${muscle}" style="padding:8px 14px;border-radius:8px;border:2px solid var(--border);background:#fff;color:var(--navy);cursor:pointer;font-weight:600;font-size:12px;font-family:inherit">${muscle}</button>`;
+  });
+  
+  html += `
+        </div>
+        
+        <!-- Exercises List -->
+        <div id="picker-exercises-list" style="display:flex;flex-direction:column;gap:8px;margin-bottom:20px">
+          <div style="text-align:center;color:var(--muted);padding:20px">Select a muscle group above</div>
+        </div>
+        
+        <button onclick="document.getElementById('exercise-picker-modal').remove()" style="width:100%;padding:12px;background:var(--navy);color:#fff;border:none;border-radius:8px;font-weight:600;cursor:pointer;font-family:inherit">Close</button>
+      </div>
+    </div>
+  `;
+  
+  const div = document.createElement('div');
+  div.id = 'exercise-picker-modal';
+  div.innerHTML = html;
+  document.body.appendChild(div);
+}
+
+function filterExercisesByMuscle(muscle){
+  const context = window.pickerContext;
+  const exercises = EXERCISE_DB[muscle] || [];
+  
+  // Update active button
+  document.querySelectorAll('.muscle-filter-btn').forEach(btn => {
+    btn.style.background = btn.getAttribute('data-muscle') === muscle ? 'var(--navy)' : '#fff';
+    btn.style.color = btn.getAttribute('data-muscle') === muscle ? '#fff' : 'var(--navy)';
+    btn.style.borderColor = btn.getAttribute('data-muscle') === muscle ? 'var(--navy)' : 'var(--border)';
+  });
+  
+  // Build exercises list
+  let html = '';
+  const availableExercises = exercises.filter(ex => !context.currentExerciseNames.includes(ex.name));
+  
+  if(availableExercises.length === 0) {
+    html = `<div style="text-align:center;color:var(--muted);padding:20px">All ${muscle} exercises already added</div>`;
+  } else {
+    html = availableExercises.map(ex => `
+      <div style="padding:12px;background:var(--cream);border-radius:8px;border-left:4px solid var(--navy);cursor:pointer" onclick="addExerciseAndClose('${context.programName}', '${context.dayName}', '${ex.name.replace(/'/g, "\'")}')">
+        <div style="font-weight:600;font-size:13px;color:var(--navy)">${ex.name}</div>
+        <div style="font-size:11px;color:var(--muted);margin-top:4px">Primary: ${ex.primary}</div>
+        ${ex.secondary ? `<div style="font-size:11px;color:var(--muted)">Secondary: ${ex.secondary}</div>` : ''}
+      </div>
+    `).join('');
+  }
+  
+  document.getElementById('picker-exercises-list').innerHTML = html;
+}
+
+function addExerciseAndClose(programName, dayName, exerciseName){
+  const prog = programs[programName];
+  const day = prog.days.find(d => d.name === dayName);
+  day.exercises.push({name: exerciseName});
+  
+  // Close picker
+  const picker = document.getElementById('exercise-picker-modal');
+  if(picker) picker.remove();
+  
+  // Refresh edit modal
+  editProgramDay(programName, dayName);
+}
+
+function showProgramDayExercises(dayName){
+  const exercises = getExercisesForDay(dayName);
+  const prog = programs[currentProgram];
+  const phaseInfo = getCurrentPhaseInfo(prog, prog.currentWeek);
+  
+  const modal = `
+    <div style="position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,.5);display:flex;align-items:flex-end;z-index:1000" onclick="document.getElementById('exercise-modal').remove()">
+      <div style="background:#fff;width:100%;border-radius:16px 16px 0 0;padding:20px;max-height:80vh;overflow-y:auto" onclick="event.stopPropagation()">
+        <div style="font-size:18px;font-weight:700;color:var(--navy);margin-bottom:6px">${dayName}</div>
+        <div style="font-size:12px;color:var(--muted);margin-bottom:16px">Week ${prog.currentWeek} • ${phaseInfo.name}</div>
+        <div style="display:flex;flex-direction:column;gap:8px">
+          ${exercises.map(ex => {
+            const targetForEx = getExerciseTargetForPhase(ex.name, 0, [prog.currentWeek]);
+            return `
+            <div style="padding:12px;background:var(--cream);border-radius:8px;border-left:4px solid var(--navy);cursor:pointer;transition:all .15s" onclick="logExerciseFromProgram('${ex.name}', '${dayName}'); document.getElementById('exercise-modal').remove()" onmouseover="this.style.background='var(--border)'" onmouseout="this.style.background='var(--cream)'">
+              <div style="font-weight:600;color:var(--navy);font-size:13px">${ex.name}</div>
+              <div style="font-size:10px;color:var(--orange);margin-top:6px;font-weight:600">Tap to log → will show last weight</div>
+            </div>
+            `;
+          }).join('')}
+        </div>
+        <button onclick="document.getElementById('exercise-modal').remove()" style="width:100%;padding:12px;margin-top:16px;background:var(--navy);color:#fff;border:none;border-radius:8px;font-weight:600;cursor:pointer;font-family:inherit">Close</button>
+      </div>
+    </div>
+  `;
+  const div = document.createElement('div');
+  div.id = 'exercise-modal';
+  div.innerHTML = modal;
+  document.body.appendChild(div);
+}
+
+function logExerciseFromProgram(exerciseName, dayName){
+  currentProgramDay = dayName;
+  goto('workout').then(() => {
+    document.getElementById('wo-program-day').value = dayName;
+    document.getElementById('wo-ex').value = exerciseName;
+    updateExercisesByProgramDay();
+    document.getElementById('wo-weight').focus();
+  });
+}
+
+function updateExercisesByProgramDay(){
+  const daySelect = document.getElementById('wo-program-day');
+  const dayName = daySelect.value;
+  currentProgramDay = dayName;
+  
+  if(!dayName || !currentProgram || !programs[currentProgram]) {
+    document.getElementById('wo-program-muscles').textContent = '';
+    return;
+  }
+  
+  // Find exercises for this day and show their targets
+  const prog = programs[currentProgram];
+  const day = prog.days.find(d => d.name === dayName);
+  if(day && day.exercises){
+    const currentWeek = prog.currentWeek;
+    const phaseInfo = getCurrentPhaseInfo(prog, currentWeek);
+    
+    const exerciseList = day.exercises.map(ex => ex.name).join(', ');
+    
+    document.getElementById('wo-program-muscles').innerHTML = `<strong>${phaseInfo.name} Phase:</strong> ${exerciseList}`;
+  }
+  
+  // Refresh active exercise buttons to show program day exercises
+  updateActiveExBar();
+}
+
+function getCurrentPhaseInfo(prog, weekNum) {
+  for(let phase of prog.phases) {
+    if(phase.weeks.includes(weekNum)) {
+      return phase;
+    }
+  }
+  return prog.phases[0];
+}
+
+// ── ADD NEW DAY ────────────────────────────────────
+let dayModalState = {focus: null, muscles: new Set()};
+
+function showAddDayModal(){
+  dayModalState = {focus: null, muscles: new Set()};
+  document.getElementById('add-day-name').value = '';
+  document.getElementById('add-day-focus').value = '';
+  document.querySelectorAll('#add-day-modal .muscle-filter-btn').forEach(btn => btn.style.background = '#fff');
+  document.getElementById('add-day-selected-muscles').textContent = 'No muscles selected';
+  document.getElementById('add-day-modal').style.display = 'flex';
+}
+
+function closeAddDayModal(){
+  document.getElementById('add-day-modal').style.display = 'none';
+}
+
+function selectDayFocus(btn){
+  // Deselect all focus buttons
+  document.querySelectorAll('#add-day-modal [data-focus]').forEach(b => {
+    b.style.background = '#fff';
+    b.style.color = 'var(--navy)';
+  });
+  
+  // Select this one
+  btn.style.background = 'var(--navy)';
+  btn.style.color = '#fff';
+  dayModalState.focus = btn.getAttribute('data-focus');
+  document.getElementById('add-day-focus').value = dayModalState.focus;
+}
+
+function toggleDayMuscle(muscle){
+  const btn = document.querySelector(`#add-day-modal .muscle-filter-btn[data-muscle="${muscle}"]`);
+  
+  if(dayModalState.muscles.has(muscle)){
+    dayModalState.muscles.delete(muscle);
+    btn.style.background = '#fff';
+    btn.style.color = 'var(--navy)';
+  } else {
+    dayModalState.muscles.add(muscle);
+    btn.style.background = 'var(--navy)';
+    btn.style.color = '#fff';
+  }
+  
+  // Update display
+  if(dayModalState.muscles.size === 0){
+    document.getElementById('add-day-selected-muscles').textContent = 'No muscles selected';
+  } else {
+    const selected = Array.from(dayModalState.muscles).join(', ');
+    document.getElementById('add-day-selected-muscles').textContent = `Selected: ${selected}`;
+  }
+}
+
+async function saveNewDay(){
+  const name = document.getElementById('add-day-name').value.trim();
+  
+  if(!name){
+    alert('Please enter a day name');
+    return;
+  }
+  
+  if(!currentProgram || !programs[currentProgram]){
+    alert('No active program selected');
+    return;
+  }
+  
+  if(dayModalState.muscles.size === 0){
+    alert('Please select at least one muscle group');
+    return;
+  }
+  
+  const prog = programs[currentProgram];
+  
+  // Check if day already exists
+  if(prog.days.find(d => d.name === name)){
+    alert('A day with this name already exists');
+    return;
+  }
+  
+  // Create new day with empty exercises (user can edit to add exercises)
+  const newDay = {
+    name: name,
+    exercises: [],
+    focus: dayModalState.focus,
+    muscles: Array.from(dayModalState.muscles)
+  };
+  
+  // Add to program
+  prog.days.push(newDay);
+  
+  // Save to Firebase
+  await fbSave('programs','list',{programs});
+  
+  // Close modal and refresh
+  closeAddDayModal();
+  renderPrograms();
+  
+  alert(`✅ Added "${name}" to your program!`);
+}
+
+async function deleteProgramDay(programName, dayName){
+  if(!confirm(`Delete "${dayName}" from your program?\n\nThis cannot be undone.`)) return;
+  
+  if(!programs[programName]) return;
+  
+  const prog = programs[programName];
+  prog.days = prog.days.filter(d => d.name !== dayName);
+  
+  await fbSave('programs','list',{programs});
+  renderPrograms();
+  
+  alert(`✅ Deleted "${dayName}"!`);
 }
 
 async function initWorkout(){
   document.getElementById('wo-date').textContent=fmtDate(currentDate);
+  
+  // Ensure programs are loaded
+  if(Object.keys(programs).length === 0) {
+    await initPrograms();
+  }
+  
+  // Show week/phase display
+  if(currentProgram && programs[currentProgram]) {
+    const prog = programs[currentProgram];
+    const phaseInfo = getCurrentPhaseInfo(prog, prog.currentWeek);
+    document.getElementById('wo-week-display').style.display = 'block';
+    document.getElementById('wo-program-name').textContent = currentProgram;
+    document.getElementById('wo-week-phase').textContent = `Week ${prog.currentWeek} of ${prog.totalWeeks} • ${phaseInfo.name}`;
+  } else {
+    document.getElementById('wo-week-display').style.display = 'none';
+  }
+  
   const [data, ce] = await Promise.all([
     fbLoad('workouts',currentDate),
     fbLoad('custom','exercises')
   ]);
   woData=data||{sets:[],dayType:"Squat + Pull"};
   customExercises=(ce&&ce.list)||{};
+  
+  // Populate program day dropdown
+  const daySelect = document.getElementById('wo-program-day');
+  const days = getProgramDays();
+  daySelect.innerHTML = '<option value="">Select a program day...</option>' + days.map(d => `<option value="${d.name}">${d.name}</option>`).join('');
+  if(woData.programDay) {
+    daySelect.value = woData.programDay;
+  } else if(days.length > 0) {
+    // Auto-select first day if none is selected
+    daySelect.value = days[0].name;
+    currentProgramDay = days[0].name;
+  }
+  
   renderDayTags();renderSetList();
   document.getElementById('wo-ex').value='';
   document.getElementById('wo-weight').value='';
@@ -1658,6 +2407,13 @@ function renderAlts(ex){
 function selectAlt(alt){document.getElementById('wo-ex').value=alt;document.getElementById('altPanel').style.display='none'}
 async function addSet(){
   const ex=document.getElementById('wo-ex').value.trim();if(!ex)return;
+  
+  // Make sure we capture the selected program day from dropdown
+  const daySelect = document.getElementById('wo-program-day');
+  if(daySelect.value) {
+    currentProgramDay = daySelect.value;
+  }
+  
   // Save custom exercise if checked
   if(document.getElementById('wo-save-ex').checked){
     // Initialize if needed
@@ -1671,9 +2427,9 @@ async function addSet(){
     }
   }
   const set={exercise:ex,weight:document.getElementById('wo-weight').value.trim(),reps:document.getElementById('wo-reps').value.trim()||'5',notes:document.getElementById('wo-notes').value.trim(),id:Date.now()};
-  woData.sets=[set,...(woData.sets||[])];woData.date=currentDate;
+  woData.sets=[set,...(woData.sets||[])];woData.date=currentDate;woData.program=currentProgram;woData.programDay=currentProgramDay;
   await fbSave('workouts',currentDate,woData);
-  showSaved('wo-saved');renderSetList();
+  showSaved('wo-saved');renderSetList();updateActiveExBar();
   document.getElementById('wo-weight').value='';
   document.getElementById('wo-notes').value='';
   document.getElementById('wo-save-ex').checked=false;
@@ -2235,9 +2991,21 @@ window.saveZoneData = saveReadiness;
 // ── ACTIVE EXERCISE QUICK-TAP ────────────────────────────────
 function updateActiveExBar() {
   const sets = woData.sets || [];
-  // Get unique exercises in order of most recent first
-  const seen = new Set();
-  const activeExercises = [];
+  const daySelect = document.getElementById('wo-program-day');
+  const selectedDay = daySelect ? daySelect.value : null;
+  
+  let activeExercises = [];
+  
+  // Start with exercises from selected program day
+  if(selectedDay && currentProgram && programs[currentProgram]) {
+    const day = programs[currentProgram].days.find(d => d.name === selectedDay);
+    if(day && day.exercises) {
+      activeExercises = day.exercises.map(e => e.name);
+    }
+  }
+  
+  // Add any logged exercises that aren't already in the list
+  const seen = new Set(activeExercises);
   sets.forEach(s => {
     if(!seen.has(s.exercise)) {
       seen.add(s.exercise);
@@ -2483,6 +3251,897 @@ async function initTrends(){
   }
 }
 window.initTrends = initTrends;
+
+// ── ANALYTICS ──────────────────────────────────────────────────
+async function initAnalytics(){
+  if(!currentProgram || !programs[currentProgram]) {
+    document.getElementById('ana-subtitle').textContent = 'No active program';
+    return;
+  }
+  
+  const prog = programs[currentProgram];
+  const totalWeeks = prog.totalWeeks;
+  
+  // Week selector
+  const weekSelector = document.getElementById('ana-week-selector');
+  weekSelector.innerHTML = '';
+  for(let w = 1; w <= totalWeeks; w++){
+    const btn = document.createElement('button');
+    btn.textContent = `W${w}`;
+    btn.style.cssText = `padding:6px 12px;border-radius:6px;border:1px solid var(--border);background:#fff;cursor:pointer;font-weight:600;min-width:40px;white-space:nowrap`;
+    if(w === prog.currentWeek) btn.style.background = 'var(--navy)';
+    if(w === prog.currentWeek) btn.style.color = '#fff';
+    btn.onclick = () => renderAnalyticsWeek(w);
+    weekSelector.appendChild(btn);
+  }
+  
+  // Initial render
+  renderAnalyticsWeek(prog.currentWeek);
+}
+
+async function renderAnalyticsWeek(week){
+  const prog = programs[currentProgram];
+  document.getElementById('ana-subtitle').textContent = `Week ${week} of ${prog.totalWeeks}`;
+  
+  // Get all workouts for this program
+  const allWorkouts = await fbLoadAll('workouts');
+  const programWorkouts = Object.values(allWorkouts || {}).filter(wo => wo.program === currentProgram && wo.programDay);
+  
+  // Filter to current week (rough: use dates, or better: workouts with week indicator)
+  // For now, we'll track all workouts logged and group by calendar week
+  
+  // Calculate weekly stats
+  const stats = calculateWeeklyStats(week, programWorkouts);
+  
+  // Get activities and target progress
+  const activitiesCount = await countActivitiesLogged();
+  const targetProgress = await calculateTargetProgress();
+  
+  // Render summary cards
+  await renderSummaryCards(stats, activitiesCount, targetProgress);
+  
+  // Render exercise tracking
+  renderExerciseTracking(week, programWorkouts);
+  
+  // Populate exercise target dropdown
+  await populateExerciseTargetDropdown();
+  
+  // Render InBody history
+  await renderInBodyHistory();
+  
+  // Render program targets progress
+  await renderTargetsProgress();
+  
+  // Update workout count for data management
+  await renderWorkoutCalendar();
+}
+
+function calculateWeeklyStats(week, workouts){
+  const setsByExercise = {};
+  let totalSets = 0;
+  let totalWorkouts = 0;
+  
+  workouts.forEach(wo => {
+    if(!wo.sets || wo.sets.length === 0) return;  // Skip empty workouts
+    totalWorkouts++;
+    wo.sets.forEach(set => {
+      if(!setsByExercise[set.exercise]) setsByExercise[set.exercise] = [];
+      setsByExercise[set.exercise].push(set);
+      totalSets++;
+    });
+  });
+  
+  return {
+    totalWorkouts,
+    totalSets,
+    uniqueExercises: Object.keys(setsByExercise).length,
+    totalVolume: calculateTotalVolume(setsByExercise),
+    exercises: setsByExercise
+  };
+}
+
+function calculateTotalVolume(setsByExercise){
+  let total = 0;
+  Object.values(setsByExercise).forEach(sets => {
+    sets.forEach(set => {
+      const weight = parseInt(set.weight) || 0;
+      const reps = parseInt(set.reps) || 0;
+      total += weight * reps;
+    });
+  });
+  return total;
+}
+
+async function countActivitiesLogged(){
+  // Load activities from Firebase for the current week
+  const allActivities = await fbLoadAll('activities') || {};
+  console.log('DEBUG: allActivities loaded:', allActivities);
+  
+  // Get current week dates (Mon-Sun)
+  const today = new Date();
+  const currentDate = new Date(today.getFullYear(), today.getMonth(), today.getDate());
+  const dayOfWeek = currentDate.getDay();
+  const monday = new Date(currentDate);
+  monday.setDate(currentDate.getDate() - (dayOfWeek === 0 ? 6 : dayOfWeek - 1));
+  
+  const sunday = new Date(monday);
+  sunday.setDate(monday.getDate() + 6);
+  
+  console.log('DEBUG: Week range:', monday.toDateString(), 'to', sunday.toDateString());
+  
+  // Count activities within current week
+  let count = 0;
+  
+  // Activities are stored as { "0": { date: "2026-09-12", activities: [...] }, ... }
+  Object.values(allActivities).forEach(dayData => {
+    if(dayData && dayData.date && dayData.activities && Array.isArray(dayData.activities)) {
+      const dateStr = dayData.date;
+      console.log('DEBUG: Checking activity on', dateStr, 'with', dayData.activities.length, 'activities');
+      
+      const [year, month, day] = dateStr.split('-');
+      const activityDate = new Date(parseInt(year), parseInt(month) - 1, parseInt(day));
+      console.log('DEBUG: Activity date parsed as:', activityDate.toDateString());
+      
+      if(activityDate >= monday && activityDate <= sunday) {
+        count += dayData.activities.length;
+        console.log('DEBUG: Activities are within week, adding', dayData.activities.length, '→ total now:', count);
+      }
+    }
+  });
+  
+  console.log('DEBUG: Final activity count:', count);
+  return count;
+}
+
+function normalizeExerciseName(name) {
+  // Normalize exercise names to handle plurals, case differences, and whitespace
+  return name
+    .toLowerCase()
+    .trim()
+    .replace(/\s+/g, ' ')  // Normalize multiple spaces to single space
+    .replace(/s\s*$/, ''); // Remove trailing 's' for plurals
+}
+
+async function calculateTargetProgress(){
+  // Get targets from Firebase
+  const targetsData = await fbLoad('analytics', 'targets') || {};
+  const targets = targetsData || {};
+  
+  let exerciseTargets = [];
+  let muscleProgress = 0;
+  let fatProgress = 0;
+  let hasMuscleTarget = false;
+  let hasFatTarget = false;
+  
+  // Get all workouts for current program
+  const allWorkouts = await fbLoadAll('workouts') || {};
+  const programWorkouts = Object.values(allWorkouts || {}).filter(wo => wo.program === currentProgram && wo.programDay);
+  
+  console.log('DEBUG: currentProgram =', currentProgram);
+  console.log('DEBUG: programWorkouts.length =', programWorkouts.length);
+  
+  // Create a map of normalized exercise names to their max weights
+  const exerciseMaxWeights = {};
+  programWorkouts.forEach(wo => {
+    if(wo.sets) {
+      wo.sets.forEach(set => {
+        const normalized = normalizeExerciseName(set.exercise);
+        const weight = parseInt(set.weight) || 0;
+        console.log('DEBUG: Exercise logged:', set.exercise, '→ normalized:', normalized, '→ weight:', weight);
+        if(!exerciseMaxWeights[normalized]) {
+          exerciseMaxWeights[normalized] = weight;
+        } else {
+          exerciseMaxWeights[normalized] = Math.max(exerciseMaxWeights[normalized], weight);
+        }
+      });
+    }
+  });
+  
+  console.log('DEBUG: exerciseMaxWeights =', exerciseMaxWeights);
+  
+  // Calculate progress for each exercise target
+  if(targets.exercises && targets.exercises.length > 0) {
+    targets.exercises.forEach(target => {
+      const exerciseName = target.exercise;
+      const normalizedName = normalizeExerciseName(exerciseName);
+      const targetWeight = parseInt(target.targetWeight) || 0;
+      
+      console.log('DEBUG: Target:', exerciseName, '→ normalized:', normalizedName, '→ targetWeight:', targetWeight);
+      
+      if(targetWeight > 0) {
+        const maxWeight = exerciseMaxWeights[normalizedName] || 0;
+        const progress = Math.min(100, Math.round((maxWeight / targetWeight) * 100));
+        console.log('DEBUG: Match result - maxWeight:', maxWeight, '→ progress:', progress);
+        exerciseTargets.push({
+          exercise: exerciseName,
+          current: maxWeight,
+          target: targetWeight,
+          progress
+        });
+      }
+    });
+  }
+  
+  // Calculate body composition progress if targets exist
+  if(targets.bodyComposition) {
+    if(targets.bodyComposition.targetMuscleMass) {
+      hasMuscleTarget = true;
+      const inbodyData = await fbLoad('analytics', 'inbody') || {};
+      const records = inbodyData.records || [];
+      if(records.length > 0) {
+        const latest = records[0];
+        const currentMuscle = parseFloat(latest.muscle) || 0;
+        const targetMuscle = parseFloat(targets.bodyComposition.targetMuscleMass) || 0;
+        if(targetMuscle > 0) {
+          muscleProgress = Math.min(100, Math.round((currentMuscle / targetMuscle) * 100));
+        }
+      }
+    }
+    
+    if(targets.bodyComposition.targetBodyFat) {
+      hasFatTarget = true;
+      const inbodyData = await fbLoad('analytics', 'inbody') || {};
+      const records = inbodyData.records || [];
+      if(records.length > 0) {
+        const latest = records[0];
+        const currentFat = parseFloat(latest.bodyfat) || 0;
+        const targetFat = parseFloat(targets.bodyComposition.targetBodyFat) || 0;
+        if(targetFat > 0) {
+          fatProgress = Math.min(100, Math.max(0, Math.round(((currentFat - targetFat) / currentFat) * 100)));
+        }
+      }
+    }
+  }
+  
+  return {
+    exerciseTargets,
+    muscleProgress,
+    fatProgress,
+    hasMuscleTarget,
+    hasFatTarget
+  };
+}
+
+async function renderSummaryCards(stats, activitiesCount=0, targetProgress=null){
+  const cards = document.getElementById('ana-summary-cards');
+  
+  let targetHtml = '';
+  if(targetProgress) {
+    // Show individual exercise targets
+    if(targetProgress.exerciseTargets && targetProgress.exerciseTargets.length > 0) {
+      targetProgress.exerciseTargets.forEach(target => {
+        const percent = Math.round(target.progress);
+        const color = percent >= 100 ? 'var(--teal)' : 'var(--navy)';
+        targetHtml += `
+          <div class="card" style="background:#FFF0E5;border:none;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:16px;text-align:center">
+            <div style="font-size:24px;font-weight:800;color:${color}">${percent}%</div>
+            <div style="font-size:12px;color:var(--muted);font-weight:600;margin-top:4px">${target.exercise}</div>
+          </div>
+        `;
+      });
+    }
+    
+    // Show Muscle Mass if target exists
+    if(targetProgress.hasMuscleTarget) {
+      const musclePercent = Math.round(targetProgress.muscleProgress || 0);
+      const muscleColor = musclePercent >= 100 ? 'var(--teal)' : 'var(--navy)';
+      targetHtml += `
+        <div class="card" style="background:#FFF0E5;border:none;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:16px;text-align:center">
+          <div style="font-size:24px;font-weight:800;color:${muscleColor}">${musclePercent}%</div>
+          <div style="font-size:12px;color:var(--muted);font-weight:600;margin-top:4px">Muscle Mass</div>
+        </div>
+      `;
+    }
+    
+    // Show Body Fat if target exists
+    if(targetProgress.hasFatTarget) {
+      const fatPercent = Math.round(targetProgress.fatProgress || 0);
+      const fatColor = fatPercent >= 100 ? 'var(--teal)' : 'var(--navy)';
+      targetHtml += `
+        <div class="card" style="background:#FFF0E5;border:none;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:16px;text-align:center">
+          <div style="font-size:24px;font-weight:800;color:${fatColor}">${Math.max(0, fatPercent)}%</div>
+          <div style="font-size:12px;color:var(--muted);font-weight:600;margin-top:4px">Body Fat</div>
+        </div>
+      `;
+    }
+  }
+  
+  cards.innerHTML = `
+    <div class="card" style="background:#F0E5FF;border:none;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:16px;text-align:center">
+      <div style="font-size:24px;font-weight:800;color:var(--navy)">${stats.totalWorkouts}</div>
+      <div style="font-size:12px;color:var(--muted);font-weight:600;margin-top:4px">Workouts Completed</div>
+    </div>
+    <div class="card" style="background:#E5FFE5;border:none;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:16px;text-align:center">
+      <div style="font-size:24px;font-weight:800;color:var(--navy)">${activitiesCount}</div>
+      <div style="font-size:12px;color:var(--muted);font-weight:600;margin-top:4px">Activities Logged</div>
+    </div>
+    ${targetHtml}
+  `;
+}
+
+function renderExerciseTracking(week, workouts){
+  const container = document.getElementById('ana-exercises-container');
+  
+  // Group sets by exercise
+  const setsByExercise = {};
+  workouts.forEach(wo => {
+    if(!wo.sets) return;
+    wo.sets.forEach(set => {
+      if(!setsByExercise[set.exercise]) setsByExercise[set.exercise] = [];
+      setsByExercise[set.exercise].push(set);
+    });
+  });
+  
+  if(Object.keys(setsByExercise).length === 0) {
+    container.innerHTML = '<div style="padding:20px;text-align:center;color:var(--muted)">No exercises logged yet for this week</div>';
+    return;
+  }
+  
+  container.innerHTML = '';
+  
+  Object.entries(setsByExercise).forEach(([exerciseName, sets]) => {
+    const card = document.createElement('div');
+    card.className = 'card';
+    card.style.marginBottom = '12px';
+    
+    // Group sets by weight
+    const byWeight = {};
+    sets.forEach(set => {
+      const weight = set.weight || 'BW';
+      if(!byWeight[weight]) byWeight[weight] = {reps: 0, count: 0};
+      byWeight[weight].reps += parseInt(set.reps) || 0;
+      byWeight[weight].count += 1;
+    });
+    
+    // Sort weights ascending
+    const sorted = Object.keys(byWeight).sort((a,b) => {
+      const aNum = parseInt(a);
+      const bNum = parseInt(b);
+      if(isNaN(aNum)) return 1;
+      if(isNaN(bNum)) return -1;
+      return aNum - bNum;
+    });
+    
+    // Max weight for this exercise
+    const maxWeight = sorted.filter(w => w !== 'BW').pop() || 'N/A';
+    
+    let html = `<div style="font-weight:700;color:var(--navy);margin-bottom:8px;display:flex;justify-content:space-between">
+      <span>${exerciseName}</span>
+      <span style="font-size:12px;color:var(--muted);font-weight:600">Max: ${maxWeight} lbs</span>
+    </div>`;
+    
+    html += `<div style="display:flex;gap:8px;flex-wrap:wrap">`;
+    sorted.forEach(weight => {
+      const data = byWeight[weight];
+      html += `<div style="background:#f5f5f5;padding:8px 12px;border-radius:6px;font-size:12px">
+        <div style="font-weight:700;color:var(--navy)">${weight} lbs</div>
+        <div style="color:var(--muted);font-size:11px">${data.reps} reps (${data.count} set${data.count>1?'s':''})</div>
+      </div>`;
+    });
+    html += `</div>`;
+    
+    card.innerHTML = html;
+    container.appendChild(card);
+  });
+}
+
+async function saveInBodyMetrics(){
+  const date = document.getElementById('inbody-date').value;
+  if(!date) {alert('Please select a date'); return;}
+  
+  const metrics = {
+    date,
+    weight: parseFloat(document.getElementById('inbody-weight').value),
+    bodyfat: parseFloat(document.getElementById('inbody-bodyfat').value),
+    muscle: parseFloat(document.getElementById('inbody-muscle').value),
+    skeletal: parseFloat(document.getElementById('inbody-skeletal').value),
+    bmi: parseFloat(document.getElementById('inbody-bmi').value),
+    visceral: parseFloat(document.getElementById('inbody-visceral').value),
+    water: parseFloat(document.getElementById('inbody-water').value),
+    protein: parseFloat(document.getElementById('inbody-protein').value),
+    mineral: parseFloat(document.getElementById('inbody-mineral').value),
+  };
+  
+  let inbodyData = await fbLoad('analytics','inbody') || {records:[]};
+  if(!inbodyData.records) inbodyData.records = [];
+  
+  // Replace if date exists, otherwise add
+  const idx = inbodyData.records.findIndex(r => r.date === date);
+  if(idx >= 0) inbodyData.records[idx] = metrics;
+  else inbodyData.records.push(metrics);
+  
+  await fbSave('analytics','inbody',inbodyData);
+  
+  // Clear form
+  document.getElementById('inbody-date').value = '';
+  document.getElementById('inbody-weight').value = '';
+  document.getElementById('inbody-bodyfat').value = '';
+  document.getElementById('inbody-muscle').value = '';
+  document.getElementById('inbody-skeletal').value = '';
+  document.getElementById('inbody-bmi').value = '';
+  document.getElementById('inbody-visceral').value = '';
+  document.getElementById('inbody-water').value = '';
+  document.getElementById('inbody-protein').value = '';
+  document.getElementById('inbody-mineral').value = '';
+  
+  showSaved('ana-saved');
+  await renderInBodyHistory();
+}
+
+// ── PROGRAM TARGETS ────────────────────────────────────
+async function populateExerciseTargetDropdown(){
+  if(!currentProgram || !programs[currentProgram]){
+    return;
+  }
+  
+  const prog = programs[currentProgram];
+  const exercises = new Set();
+  
+  // Collect all unique exercises from program days
+  prog.days.forEach(day => {
+    day.exercises.forEach(ex => {
+      exercises.add(ex.name);
+    });
+  });
+  
+  // Add custom exercises from user's list
+  const ce = await fbLoad('custom', 'exercises');
+  if(ce && ce.list) {
+    Object.values(ce.list).forEach(exerciseArray => {
+      if(Array.isArray(exerciseArray)) {
+        exerciseArray.forEach(ex => exercises.add(ex));
+      }
+    });
+  }
+  
+  const select = document.getElementById('target-exercise-select');
+  select.innerHTML = '<option value="">Select an exercise...</option>' + 
+    Array.from(exercises).sort().map(ex => `<option value="${ex}">${ex}</option>`).join('');
+}
+
+async function addExerciseTarget(){
+  const exerciseName = document.getElementById('target-exercise-select').value.trim();
+  const targetWeight = document.getElementById('target-exercise-weight').value.trim();
+  
+  if(!exerciseName || !targetWeight){
+    alert('Please select exercise and enter target weight');
+    return;
+  }
+  
+  if(!currentProgram){
+    alert('No active program selected');
+    return;
+  }
+  
+  let targetData = await fbLoad('analytics','targets') || {exercises: [], bodyComposition: null};
+  
+  // Check if target already exists
+  const existing = targetData.exercises.find(t => t.exercise === exerciseName);
+  if(existing){
+    existing.targetWeight = parseInt(targetWeight);
+  } else {
+    targetData.exercises.push({
+      exercise: exerciseName,
+      targetWeight: parseInt(targetWeight)
+    });
+  }
+  
+  await fbSave('analytics','targets',targetData);
+  
+  document.getElementById('target-exercise-select').value = '';
+  document.getElementById('target-exercise-weight').value = '';
+  
+  alert(`✅ Target set for ${exerciseName}: ${targetWeight} lbs`);
+  await renderTargetsProgress();
+}
+
+async function deleteExerciseTarget(exerciseName){
+  if(!confirm(`Delete target for ${exerciseName}?`)) return;
+  
+  let targetData = await fbLoad('analytics','targets') || {exercises: [], bodyComposition: null};
+  targetData.exercises = targetData.exercises.filter(t => t.exercise !== exerciseName);
+  await fbSave('analytics','targets',targetData);
+  
+  alert(`✅ Deleted target for ${exerciseName}`);
+  await renderTargetsProgress();
+}
+
+async function saveBodyTargets(){
+  const muscleMass = document.getElementById('target-muscle-mass').value.trim();
+  const bodyFat = document.getElementById('target-body-fat').value.trim();
+  
+  if(!muscleMass && !bodyFat){
+    alert('Please enter at least one body composition target');
+    return;
+  }
+  
+  let targetData = await fbLoad('analytics','targets') || {exercises: [], bodyComposition: null};
+  
+  targetData.bodyComposition = {
+    targetMuscleMass: muscleMass ? parseFloat(muscleMass) : null,
+    targetBodyFat: bodyFat ? parseFloat(bodyFat) : null
+  };
+  
+  await fbSave('analytics','targets',targetData);
+  
+  alert('✅ Body composition targets saved');
+  await renderTargetsProgress();
+}
+
+async function deleteBodyTarget(type){
+  if(!confirm(`Delete ${type === 'muscle' ? 'Muscle Mass' : 'Body Fat'} target?`)) return;
+  
+  let targetData = await fbLoad('analytics','targets') || {exercises: [], bodyComposition: null};
+  
+  if(type === 'muscle'){
+    if(targetData.bodyComposition) targetData.bodyComposition.targetMuscleMass = null;
+  } else if(type === 'fat'){
+    if(targetData.bodyComposition) targetData.bodyComposition.targetBodyFat = null;
+  }
+  
+  // Remove entire bodyComposition if both are null
+  if(targetData.bodyComposition && !targetData.bodyComposition.targetMuscleMass && !targetData.bodyComposition.targetBodyFat){
+    targetData.bodyComposition = null;
+  }
+  
+  await fbSave('analytics','targets',targetData);
+  alert(`✅ Target deleted`);
+  await renderTargetsProgress();
+}
+
+async function renderTargetsProgress(){
+  const container = document.getElementById('ana-targets-progress');
+  
+  let targetData = await fbLoad('analytics','targets') || {exercises: [], bodyComposition: null};
+  if(!targetData.exercises && !targetData.bodyComposition){
+    container.innerHTML = '<div style="padding:12px;text-align:center;color:var(--muted);font-style:italic">No targets set yet</div>';
+    return;
+  }
+  
+  let html = '';
+  
+  // Exercise targets
+  if(targetData.exercises && targetData.exercises.length > 0){
+    const allWorkouts = await fbLoadAll('workouts') || {};
+    const programWorkouts = Object.values(allWorkouts).filter(wo => wo && wo.program === currentProgram && wo.sets);
+    
+    targetData.exercises.forEach(target => {
+      // Find max weight logged for this exercise
+      let maxWeight = 0;
+      programWorkouts.forEach(wo => {
+        wo.sets.forEach(set => {
+          if(set.exercise.toLowerCase() === target.exercise.toLowerCase()){
+            const weight = parseInt(set.weight) || 0;
+            if(weight > maxWeight) maxWeight = weight;
+          }
+        });
+      });
+      
+      const progress = maxWeight > 0 ? Math.round((maxWeight / target.targetWeight) * 100) : 0;
+      const progressBarWidth = Math.min(progress, 100);
+      
+      html += `
+        <div class="card" style="margin-bottom:8px">
+          <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:8px">
+            <div style="flex:1">
+              <div style="font-weight:700;color:var(--navy)">${target.exercise}</div>
+              <div style="font-size:12px;color:var(--muted);margin-top:4px">Current: ${maxWeight} lbs | Target: ${target.targetWeight} lbs</div>
+            </div>
+            <button onclick="deleteExerciseTarget('${target.exercise}')" style="padding:4px 8px;background:#FF6E00;color:#fff;border:none;border-radius:4px;cursor:pointer;font-size:11px;font-weight:600;white-space:nowrap;margin-left:8px">Delete</button>
+          </div>
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
+            <div style="font-weight:700;color:${progress >= 100 ? 'var(--teal)' : 'var(--navy)'}">${progress}%</div>
+          </div>
+          <div style="width:100%;height:8px;background:var(--lg);border-radius:4px;overflow:hidden">
+            <div style="width:${progressBarWidth}%;height:100%;background:${progress >= 100 ? 'var(--teal)' : 'var(--navy)'};transition:width 0.3s"></div>
+          </div>
+        </div>
+      `;
+    });
+  }
+  
+  // Body composition targets
+  if(targetData.bodyComposition){
+    const inbodyData = await fbLoad('analytics','inbody') || {records: []};
+    const latest = inbodyData.records && inbodyData.records.length > 0 
+      ? inbodyData.records.sort((a,b) => new Date(b.date) - new Date(a.date))[0]
+      : null;
+    
+    if(targetData.bodyComposition.targetMuscleMass){
+      const current = latest ? latest.muscle : null;
+      const progress = current ? Math.round((current / targetData.bodyComposition.targetMuscleMass) * 100) : 0;
+      
+      html += `
+        <div class="card" style="margin-bottom:8px">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+            <div style="font-weight:700;color:var(--navy)">Muscle Mass</div>
+            <div style="font-size:12px;color:var(--muted)">Current: ${current ? current + ' lbs' : 'No data'}</div>
+          </div>
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
+            <div style="font-size:12px;color:var(--muted)">Target: ${targetData.bodyComposition.targetMuscleMass} lbs</div>
+            <div style="font-weight:700;color:${progress >= 100 ? 'var(--teal)' : 'var(--navy)'}">${current ? progress + '%' : '—'}</div>
+          </div>
+          <div style="width:100%;height:8px;background:var(--lg);border-radius:4px;overflow:hidden">
+            <div style="width:${current ? Math.min(progress, 100) : 0}%;height:100%;background:${progress >= 100 ? 'var(--teal)' : 'var(--navy)'};transition:width 0.3s"></div>
+          </div>
+        </div>
+      `;
+    }
+    
+    if(targetData.bodyComposition.targetBodyFat){
+      const current = latest ? latest.bodyfat : null;
+      // For body fat, lower is better, so calculate as: 100 - (current/target * 100)
+      const progress = current ? Math.round(((targetData.bodyComposition.targetBodyFat - current) / (targetData.bodyComposition.targetBodyFat - 0)) * 100) : 0;
+      
+      html += `
+        <div class="card" style="margin-bottom:8px">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+            <div style="font-weight:700;color:var(--navy)">Body Fat %</div>
+            <div style="font-size:12px;color:var(--muted)">Current: ${current ? current + '%' : 'No data'}</div>
+          </div>
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
+            <div style="font-size:12px;color:var(--muted)">Target: ${targetData.bodyComposition.targetBodyFat}%</div>
+            <div style="font-weight:700;color:${progress >= 100 ? 'var(--teal)' : 'var(--navy)'}">${current ? Math.max(0, progress) + '%' : '—'}</div>
+          </div>
+          <div style="width:100%;height:8px;background:var(--lg);border-radius:4px;overflow:hidden">
+            <div style="width:${current ? Math.max(0, Math.min(progress, 100)) : 0}%;height:100%;background:${progress >= 100 ? 'var(--teal)' : 'var(--navy)'};transition:width 0.3s"></div>
+          </div>
+        </div>
+      `;
+    }
+  }
+  
+  container.innerHTML = html || '<div style="padding:12px;text-align:center;color:var(--muted);font-style:italic">No targets set yet</div>';
+}
+
+async function renderInBodyHistory(){
+  const historyContainer = document.getElementById('ana-inbody-history');
+  const inbodyData = await fbLoad('analytics','inbody') || {records:[]};
+  
+  if(!inbodyData.records || inbodyData.records.length === 0) {
+    historyContainer.innerHTML = '<div style="padding:20px;text-align:center;color:var(--muted)">No InBody results logged yet</div>';
+    return;
+  }
+  
+  // Sort by date descending
+  const sorted = [...inbodyData.records].sort((a,b) => new Date(b.date) - new Date(a.date));
+  
+  historyContainer.innerHTML = '';
+  sorted.forEach(record => {
+    const card = document.createElement('div');
+    card.className = 'card';
+    card.style.marginBottom = '8px';
+    
+    const dateObj = new Date(record.date + 'T00:00:00');
+    const dateStr = dateObj.toLocaleDateString('en-US', {month:'short', day:'numeric'});
+    
+    card.innerHTML = `
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+        <div style="font-weight:700;color:var(--navy)">${dateStr}</div>
+        <button class="btn btn-small" style="padding:4px 8px;font-size:11px" onclick="deleteInBodyRecord('${record.date}')">Delete</button>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;font-size:12px">
+        <div><span style="color:var(--muted)">Weight:</span> <span style="font-weight:700">${record.weight}</span> lbs</div>
+        <div><span style="color:var(--muted)">Body Fat:</span> <span style="font-weight:700">${record.bodyfat}</span>%</div>
+        <div><span style="color:var(--muted)">Muscle:</span> <span style="font-weight:700">${record.muscle}</span> lbs</div>
+        <div><span style="color:var(--muted)">Skeletal:</span> <span style="font-weight:700">${record.skeletal}</span> lbs</div>
+        <div><span style="color:var(--muted)">BMI:</span> <span style="font-weight:700">${record.bmi}</span></div>
+        <div><span style="color:var(--muted)">Visceral:</span> <span style="font-weight:700">${record.visceral}</span> lbs</div>
+      </div>
+    `;
+    historyContainer.appendChild(card);
+  });
+}
+
+async function deleteInBodyRecord(date){
+  if(!confirm('Delete this InBody record?')) return;
+  
+  let inbodyData = await fbLoad('analytics','inbody') || {records:[]};
+  inbodyData.records = inbodyData.records.filter(r => r.date !== date);
+  await fbSave('analytics','inbody',inbodyData);
+  await renderInBodyHistory();
+}
+
+async function renderWorkoutCalendar(){
+  const calendarEl = document.getElementById('ana-calendar-view');
+  const allWorkouts = await fbLoadAll('workouts') || {};
+  
+  // Get current week dates (Mon-Sun)
+  const today = new Date();
+  const currentDate = new Date(today.getFullYear(), today.getMonth(), today.getDate());
+  const dayOfWeek = currentDate.getDay();
+  const monday = new Date(currentDate);
+  monday.setDate(currentDate.getDate() - (dayOfWeek === 0 ? 6 : dayOfWeek - 1));
+  
+  // Create a map of workouts by date for quick lookup
+  const workoutsByDate = {};
+  Object.values(allWorkouts).forEach(wo => {
+    if(wo && wo.date && wo.sets) {
+      workoutsByDate[wo.date] = wo;
+    }
+  });
+  
+  calendarEl.innerHTML = '';
+  const dayNames = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
+  
+  for(let i = 0; i < 7; i++){
+    const date = new Date(monday);
+    date.setDate(monday.getDate() + i);
+    
+    const dateStr = date.getFullYear() + '-' + 
+      String(date.getMonth() + 1).padStart(2, '0') + '-' + 
+      String(date.getDate()).padStart(2, '0');
+    
+    const workout = workoutsByDate[dateStr];
+    const hasData = workout && workout.sets && workout.sets.length > 0;
+    
+    const dayEl = document.createElement('div');
+    dayEl.style.cssText = `padding:12px;border-radius:8px;text-align:center;cursor:pointer;border:2px solid ${hasData ? 'var(--navy)' : 'var(--border)'};background:${hasData ? '#E5E5FF' : '#fff'};transition:all 0.2s;`;
+    
+    dayEl.innerHTML = `<div style="font-weight:700;font-size:11px;color:var(--muted);margin-bottom:4px">${dayNames[i]}</div><div style="font-size:14px;font-weight:700;color:var(--navy)">${date.getDate()}</div><div style="font-size:10px;color:${hasData ? 'var(--navy)' : 'var(--muted)'};margin-top:4px">${hasData ? workout.sets.length + ' sets' : '—'}</div>`;
+    
+    dayEl.onclick = () => showWorkoutDetailModal(dateStr);
+    calendarEl.appendChild(dayEl);
+  }
+}
+
+let selectedWorkoutDate = null;
+
+async function showWorkoutDetailModal(dateStr){
+  selectedWorkoutDate = dateStr;
+  const allWorkouts = await fbLoadAll('workouts') || {};
+  
+  // Find the workout for this date (using same method as calendar)
+  let workout = null;
+  Object.values(allWorkouts).forEach(wo => {
+    if(wo && wo.date === dateStr && wo.sets) {
+      workout = wo;
+    }
+  });
+  
+  const [year, month, day] = dateStr.split('-');
+  const dateObj = new Date(parseInt(year), parseInt(month) - 1, parseInt(day));
+  const dateDisp = dateObj.toLocaleDateString('en-US', {weekday:'short', month:'short', day:'numeric', year:'numeric'});
+  
+  document.getElementById('modal-date-display').textContent = dateDisp;
+  
+  const contentEl = document.getElementById('modal-workout-content');
+  
+  if(!workout || !workout.sets || workout.sets.length === 0){
+    document.getElementById('modal-workout-count').textContent = 'No workouts logged';
+    contentEl.innerHTML = '<div style="padding:12px;text-align:center;color:var(--muted)">No workouts for this date</div>';
+    const modal = document.getElementById('workout-detail-modal');
+    modal.style.display = 'flex';
+    return;
+  }
+  
+  const byExercise = {};
+  workout.sets.forEach((set, idx) => {
+    if(!byExercise[set.exercise]) byExercise[set.exercise] = [];
+    byExercise[set.exercise].push({...set, idx});
+  });
+  
+  let html = '';
+  Object.entries(byExercise).forEach(([exercise, sets]) => {
+    html += `<div class="card" style="margin-bottom:12px">
+      <div style="font-weight:700;color:var(--navy);margin-bottom:8px">${exercise}</div>
+      <div style="display:flex;flex-direction:column;gap:6px">
+        ${sets.map((s, i) => `
+          <div style="display:flex;justify-content:space-between;align-items:center;padding:8px;background:var(--lg);border-radius:6px">
+            <div style="font-size:12px;color:var(--navy)">${s.weight || '—'} lbs × ${s.reps || '—'} reps${s.notes ? ' (' + s.notes + ')' : ''}</div>
+            <button onclick="deleteIndividualSet('${dateStr}', ${s.idx})" style="padding:4px 8px;background:#FF6E00;color:#fff;border:none;border-radius:4px;cursor:pointer;font-size:11px;font-weight:600">Delete</button>
+          </div>
+        `).join('')}
+      </div>
+    </div>`;
+  });
+  
+  contentEl.innerHTML = html;
+  document.getElementById('modal-workout-count').textContent = `${workout.sets.length} set${workout.sets.length !== 1 ? 's' : ''} logged`;
+  
+  const modal = document.getElementById('workout-detail-modal');
+  modal.style.display = 'flex';
+}
+
+function closeWorkoutDetailModal(){
+  document.getElementById('workout-detail-modal').style.display = 'none';
+  selectedWorkoutDate = null;
+}
+
+async function deleteIndividualSet(dateStr, setIdx){
+  const allWorkouts = await fbLoadAll('workouts') || {};
+  
+  // Find the workout
+  let workout = null;
+  Object.values(allWorkouts).forEach(wo => {
+    if(wo && wo.date === dateStr && wo.sets) {
+      workout = wo;
+    }
+  });
+  
+  if(!workout) return;
+  
+  // Remove the set at this index
+  workout.sets = workout.sets.filter((_, idx) => idx !== setIdx);
+  
+  // Save updated workout
+  await fbSave('workouts', dateStr, workout);
+  
+  // Refresh the modal to show updated data
+  await showWorkoutDetailModal(dateStr);
+  
+  // Refresh calendar and exercise progression and summary cards
+  await renderWorkoutCalendar();
+  
+  const prog = programs[currentProgram];
+  const programWorkouts = Object.values(allWorkouts || {}).filter(wo => wo.program === currentProgram && wo.programDay);
+  const stats = calculateWeeklyStats(prog.currentWeek, programWorkouts);
+  const activitiesCount = countActivitiesLogged();
+  const targetProgress = await calculateTargetProgress();
+  await renderSummaryCards(stats, activitiesCount, targetProgress);
+  renderExerciseTracking(prog.currentWeek, programWorkouts);
+}
+
+async function deleteWorkoutDay(){
+  if(!selectedWorkoutDate){
+    alert('No date selected');
+    return;
+  }
+  
+  const [year, month, day] = selectedWorkoutDate.split('-');
+  const dateObj = new Date(parseInt(year), parseInt(month) - 1, parseInt(day));
+  const dateStr = dateObj.toLocaleDateString('en-US', {weekday:'short', month:'short', day:'numeric'});
+  
+  const confirmed = confirm(`Delete all workouts for ${dateStr}?\n\nThis cannot be undone.`);
+  if(!confirmed) return;
+  
+  await fbSave('workouts', selectedWorkoutDate, {sets: [], date: selectedWorkoutDate});
+  alert(`✅ Deleted workouts for ${dateStr}`);
+  
+  closeWorkoutDetailModal();
+  
+  // Refresh everything - calendar, stats, and exercise progression
+  await renderWorkoutCalendar();
+  
+  const allWorkouts = await fbLoadAll('workouts') || {};
+  const prog = programs[currentProgram];
+  const programWorkouts = Object.values(allWorkouts || {}).filter(wo => wo.program === currentProgram && wo.programDay);
+  const stats = calculateWeeklyStats(prog.currentWeek, programWorkouts);
+  const activitiesCount = countActivitiesLogged();
+  const targetProgress = await calculateTargetProgress();
+  await renderSummaryCards(stats, activitiesCount, targetProgress);
+  renderExerciseTracking(prog.currentWeek, programWorkouts);
+}
+
+async function clearWorkoutDataConfirm(){
+  const allWorkouts = await fbLoadAll('workouts');
+  const programWorkouts = Object.values(allWorkouts || {}).filter(wo => wo.program === currentProgram && wo.programDay);
+  
+  if(programWorkouts.length === 0) {
+    alert('No workouts to clear!');
+    return;
+  }
+  
+  const confirmed = confirm(`⚠️ Delete ${programWorkouts.length} workout${programWorkouts.length > 1 ? 's' : ''} for "${currentProgram}"?\n\nThis cannot be undone.`);
+  if(!confirmed) return;
+  
+  // Delete each workout
+  let deleted = 0;
+  const allWorkoutDates = Object.keys(allWorkouts || {});
+  for(let date of allWorkoutDates) {
+    const wo = allWorkouts[date];
+    if(wo && wo.program === currentProgram && wo.programDay) {
+      // Set to empty workout (functionally cleared)
+      await fbSave('workouts', date, {sets: [], date: date});
+      deleted++;
+    }
+  }
+  
+  alert(`✅ Cleared ${deleted} workout${deleted > 1 ? 's' : ''}! Starting fresh Monday.`);
+  
+  // Refresh analytics
+  await initAnalytics();
+}
 
 function buildMacroChart(macro, periods, mode){
   const card = document.createElement('div');
@@ -3125,8 +4784,24 @@ async function quickAddMeal() {
 }
 window.quickAddMeal = quickAddMeal;
 
-// Initialize user session
-checkUserSession();
+// Initialize user session - don't wait, just fire it
+window.addEventListener('load', function() {
+  console.log('App loaded, initializing...');
+  
+  // Hide loading screen immediately
+  const loading = document.getElementById('loading');
+  if(loading) {
+    console.log('Hiding loading screen');
+    loading.style.display = 'none';
+  } else {
+    console.warn('Loading screen element not found');
+  }
+  
+  // Show login screen or auto-login
+  console.log('Checking user session...');
+  checkUserSession();
+  console.log('Startup complete');
+});
 
 </script>
 
@@ -3260,5 +4935,135 @@ checkUserSession();
   </div>
 </div>
 
-</body>
-</html>
+<!-- ANALYTICS SCREEN -->
+<div id="screen-analytics" class="screen">
+  <div class="page-header">
+    <button class="back-btn" onclick="goto('home')">←</button>
+    <div><h2>Analytics</h2><div class="subtitle" id="ana-subtitle"></div></div>
+  </div>
+
+  <!-- Program Week Selector -->
+  <div class="card" style="margin-bottom:12px">
+    <div class="label" style="margin-bottom:8px">Program Week</div>
+    <div style="display:flex;gap:6px;overflow-x:auto;padding-bottom:4px" id="ana-week-selector"></div>
+  </div>
+
+  <!-- Weekly Summary Cards -->
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:12px" id="ana-summary-cards"></div>
+
+  <!-- Exercise Tracking Section -->
+  <div class="section-label">Exercise Progression</div>
+  <div id="ana-exercises-container"></div>
+
+  <!-- Program Targets Section -->
+  <div class="section-label" style="margin-top:16px">Program Targets</div>
+  
+  <!-- Add Target Form -->
+  <div class="card" style="background:var(--cream);border:1.5px solid #FF6E0030;margin-bottom:12px">
+    <div style="font-size:13px;font-weight:700;color:var(--orange);margin-bottom:12px;text-transform:uppercase;letter-spacing:.05em">Set Exercise Target</div>
+    
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:12px">
+      <div>
+        <div class="label">Exercise</div>
+        <select class="input" id="target-exercise-select" style="margin-bottom:0">
+          <option value="">Select an exercise...</option>
+        </select>
+      </div>
+      <div>
+        <div class="label">Target Weight (lbs)</div>
+        <input type="number" class="input" id="target-exercise-weight" placeholder="e.g. 225" style="margin-bottom:0"/>
+      </div>
+    </div>
+    
+    <button class="btn btn-orange" onclick="addExerciseTarget()" style="width:100%;margin-bottom:12px">+ Add Exercise Target</button>
+    
+    <div style="border-top:1px solid var(--border);padding-top:12px">
+      <div class="label" style="margin-bottom:8px">Body Composition Targets</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px">
+        <div>
+          <div class="label" style="font-size:11px">Muscle Mass Target (lbs)</div>
+          <input type="number" class="input" id="target-muscle-mass" placeholder="e.g. 138" step="0.1" style="margin-bottom:0"/>
+        </div>
+        <div>
+          <div class="label" style="font-size:11px">Body Fat % Target</div>
+          <input type="number" class="input" id="target-body-fat" placeholder="e.g. 16" step="0.1" style="margin-bottom:0"/>
+        </div>
+      </div>
+      <button class="btn btn-teal" onclick="saveBodyTargets()" style="width:100%">Save Body Targets</button>
+    </div>
+  </div>
+  
+  <!-- Targets Progress -->
+  <div id="ana-targets-progress"></div>
+
+  <!-- InBody Metrics Section -->
+  <div class="section-label" style="margin-top:16px">InBody Metrics</div>
+  <div class="card" style="background:var(--cream);border:1.5px solid #06A77D30">
+    <div style="font-size:13px;font-weight:700;color:var(--teal);margin-bottom:12px;text-transform:uppercase;letter-spacing:.05em">Log InBody Results</div>
+    
+    <div class="label" style="margin-bottom:6px">Test Date</div>
+    <input type="date" class="input" id="inbody-date" style="margin-bottom:12px"/>
+    
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px">
+      <div><div class="label">Body Weight (lbs)</div><input type="number" class="input" id="inbody-weight" placeholder="e.g. 165"/></div>
+      <div><div class="label">Body Fat %</div><input type="number" class="input" id="inbody-bodyfat" placeholder="e.g. 18.5" step="0.1"/></div>
+    </div>
+    
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px">
+      <div><div class="label">Muscle Mass (lbs)</div><input type="number" class="input" id="inbody-muscle" placeholder="e.g. 135"/></div>
+      <div><div class="label">Skeletal Muscle (lbs)</div><input type="number" class="input" id="inbody-skeletal" placeholder="e.g. 85"/></div>
+    </div>
+    
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px">
+      <div><div class="label">BMI</div><input type="number" class="input" id="inbody-bmi" placeholder="e.g. 23.8" step="0.1"/></div>
+      <div><div class="label">Visceral Fat (lbs)</div><input type="number" class="input" id="inbody-visceral" placeholder="e.g. 2.5" step="0.1"/></div>
+    </div>
+    
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:12px">
+      <div><div class="label">Water %</div><input type="number" class="input" id="inbody-water" placeholder="e.g. 61.2" step="0.1"/></div>
+      <div><div class="label">Protein %</div><input type="number" class="input" id="inbody-protein" placeholder="e.g. 16.1" step="0.1"/></div>
+    </div>
+    
+    <div style="margin-bottom:12px">
+      <div class="label">Mineral (lbs)</div>
+      <input type="number" class="input" id="inbody-mineral" placeholder="e.g. 6.2" step="0.1" style="margin-bottom:0"/>
+    </div>
+    
+    <button class="btn btn-teal" onclick="saveInBodyMetrics()">Save InBody Results</button>
+  </div>
+
+  <!-- InBody History -->
+  <div class="section-label" style="margin-top:16px">InBody History</div>
+  <div id="ana-inbody-history"></div>
+
+  <!-- Data Management -->
+  <div class="section-label" style="margin-top:20px;color:var(--orange)">⚙️ Data Management</div>
+  <div class="card" style="background:#FFE5E5;border:1.5px solid #FF6E0030">
+    <div style="font-size:13px;font-weight:700;color:var(--orange);margin-bottom:12px;text-transform:uppercase;letter-spacing:.05em">Workout Calendar</div>
+    <div style="font-size:12px;color:var(--muted);margin-bottom:12px">Click a date to view or delete workouts</div>
+    <div id="ana-calendar-view" style="display:grid;grid-template-columns:repeat(7,1fr);gap:6px"></div>
+  </div>
+
+</div>
+
+<!-- WORKOUT DAY DETAIL MODAL -->
+<div id="workout-detail-modal" style="display:none;position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,.5);z-index:1000;justify-content:flex-end;align-items:flex-end">
+  <div style="background:#fff;width:100%;border-radius:16px 16px 0 0;padding:20px;max-height:90vh;overflow-y:auto">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">
+      <div>
+        <div style="font-size:18px;font-weight:700;color:var(--navy)" id="modal-date-display"></div>
+        <div style="font-size:12px;color:var(--muted);margin-top:4px" id="modal-workout-count"></div>
+      </div>
+      <button onclick="closeWorkoutDetailModal()" style="padding:8px 12px;background:var(--border);border:none;border-radius:6px;cursor:pointer;font-size:14px;font-weight:600">✕</button>
+    </div>
+    
+    <div id="modal-workout-content" style="margin-bottom:16px"></div>
+    
+    <div style="display:flex;gap:8px">
+      <button class="btn btn-orange" onclick="deleteWorkoutDay()" style="flex:1">Delete All</button>
+      <button class="btn btn-ghost" onclick="closeWorkoutDetailModal()" style="flex:1">Close</button>
+    </div>
+  </div>
+</div>
+
+
